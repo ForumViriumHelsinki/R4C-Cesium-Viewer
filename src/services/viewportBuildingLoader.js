@@ -67,6 +67,20 @@ const CONFIG = {
 	CACHE_TTL: 60 * 60 * 1000,
 	/** Maximum camera altitude (meters) for building loading - prevents mass loading at region overview */
 	MAX_ALTITUDE_FOR_LOADING: 3000,
+	/** First retry delay for a failed tile load (ms); doubles per attempt */
+	RETRY_BASE_DELAY_MS: 2000,
+	/** Longest delay between tile load retries (ms) */
+	RETRY_MAX_DELAY_MS: 30000,
+	/** Retries per tile before waiting for the next camera move */
+	MAX_TILE_RETRIES: 4,
+}
+
+/** Thrown when a tile's response belongs to a view mode the user has left. */
+class StaleTileError extends Error {
+	constructor(tileKey) {
+		super(`Tile ${tileKey} was fetched for the previous view mode`)
+		this.name = 'StaleTileError'
+	}
 }
 
 /**
@@ -141,6 +155,20 @@ export default class ViewportBuildingLoader {
 		this.debounceTimeout = null
 		this.isInitialized = false
 		this.cameraMovedHandler = null
+		/** @type {((collection: unknown, dataSource: {name?: string}) => void)|null} Listener on viewer.dataSources.dataSourceRemoved */
+		this.dataSourceRemovedHandler = null
+		/** @type {ReturnType<typeof setTimeout>|null} Pending reconcile after external removal */
+		this.reconcileTimeout = null
+
+		// Failed tile retries
+		/** @type {Map<string, number>} Consecutive failed loads per tile key */
+		this.tileFailureCounts = new Map()
+		/** @type {ReturnType<typeof setTimeout>|null} Pending retry of failed tiles */
+		this.retryTimeout = null
+		/** @type {number|null} When the pending retry fires (ms since epoch) */
+		this.retryDueAt = null
+		this.retryBaseDelayMs = CONFIG.RETRY_BASE_DELAY_MS
+		this.maxTileRetries = CONFIG.MAX_TILE_RETRIES
 
 		// Cesium scratch objects for performance (reuse to avoid GC)
 		// Initialized lazily after Cesium is loaded
@@ -247,6 +275,16 @@ export default class ViewportBuildingLoader {
 		}
 		this.viewer.camera.moveEnd.addEventListener(this.cameraMovedHandler)
 
+		// A tile DataSource removed by other code (postal-code navigation, view
+		// switch) has to be loaded again even when the camera does not move after.
+		const dataSourceRemoved = this.viewer.dataSources?.dataSourceRemoved
+		if (dataSourceRemoved) {
+			this.dataSourceRemovedHandler = (_collection, dataSource) => {
+				this.handleDataSourceRemoved(dataSource)
+			}
+			dataSourceRemoved.addEventListener(this.dataSourceRemovedHandler)
+		}
+
 		this.isInitialized = true
 		logger.debug('[ViewportBuildingLoader] Camera listeners attached')
 
@@ -336,6 +374,67 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * React to a DataSource leaving the viewer.
+	 *
+	 * Removing all DataSources fires this once per DataSource, so the check is
+	 * coalesced into one task. The loader's own evictions delete the tile from
+	 * `loadedTiles` before that task runs, so they trigger no reload.
+	 *
+	 * @param {{name?: string}|undefined} dataSource - The removed DataSource
+	 * @private
+	 */
+	handleDataSourceRemoved(dataSource) {
+		if (!dataSource?.name?.startsWith('Buildings Viewport')) return
+		if (this.reconcileTimeout) return
+		this.reconcileTimeout = setTimeout(() => {
+			this.reconcileTimeout = null
+			if (!this.viewer || this.reconcileLoadedTiles().length === 0) return
+			this.updateViewport().catch((error) => {
+				logger.error('Failed to reload tiles removed externally:', error)
+			})
+		}, 0)
+	}
+
+	/**
+	 * Schedule another viewport update after a tile load failed.
+	 *
+	 * Without this a tile that failed after unifiedLoader's own retries (HTTP
+	 * 429 bursts, gateway timeouts, an open circuit breaker) stayed empty until
+	 * the next camera move. Cancelled loads are not retried: the code that
+	 * cancelled them decides what loads next. A tile from the previous view mode
+	 * is retried at once; other failures back off exponentially and stop after
+	 * `maxTileRetries`, leaving the next camera move to try again.
+	 *
+	 * @param {string} tileKey - Tile that failed
+	 * @param {unknown} error - The rejection
+	 * @private
+	 */
+	scheduleTileRetry(tileKey, error) {
+		const name = /** @type {{name?: string}} */ (error)?.name
+		if (name === 'AbortError') return
+
+		let delay = 0
+		if (name !== 'StaleTileError') {
+			const failures = (this.tileFailureCounts.get(tileKey) || 0) + 1
+			this.tileFailureCounts.set(tileKey, failures)
+			if (failures > this.maxTileRetries) return
+			delay = Math.min(CONFIG.RETRY_MAX_DELAY_MS, this.retryBaseDelayMs * 2 ** (failures - 1))
+		}
+
+		// One pending update retries every failed tile still in view; keep the
+		// earliest so a short delay is not held back by a longer one.
+		if (this.retryTimeout && delay >= (this.retryDueAt ?? 0) - Date.now()) return
+		if (this.retryTimeout) clearTimeout(this.retryTimeout)
+		this.retryDueAt = Date.now() + delay
+		this.retryTimeout = setTimeout(() => {
+			this.retryTimeout = null
+			this.updateViewport().catch((err) => {
+				logger.error('Failed to retry tile loads:', err)
+			})
+		}, delay)
+	}
+
+	/**
 	 * Update camera velocity tracking for prefetch prioritization
 	 * Calculates direction and speed of camera movement.
 	 * @private
@@ -418,6 +517,9 @@ export default class ViewportBuildingLoader {
 			logger.debug(
 				`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles (${tilesInBounds.length} in bounds)`
 			)
+
+			// Forget tiles whose DataSource someone else removed, so they load again
+			this.reconcileLoadedTiles()
 
 			// Update visibility for loaded tiles
 			this.updateTileVisibility(requiredTileKeys)
@@ -675,6 +777,7 @@ export default class ViewportBuildingLoader {
 					logger.error(`Failed to load tile ${tileKey}:`, error)
 					this.activeLoads--
 					this.loadingTiles.delete(tileKey)
+					this.scheduleTileRetry(tileKey, error)
 					// Continue processing queue even on error
 					this.processLoadingQueue().catch((err) => {
 						logger.error('Failed to continue processing loading queue after error:', err)
@@ -758,6 +861,13 @@ export default class ViewportBuildingLoader {
 					: Promise.resolve(null),
 			])
 
+			// The response is for the view mode the request was made in. If the user
+			// switched views meanwhile, its buildings would be styled and named for
+			// the wrong dataset; drop it so the tile loads again for the new view.
+			if (this.toggleStore.helsinkiView !== isHelsinkiView) {
+				throw new StaleTileError(tileKey)
+			}
+
 			// Clear stale heat data error if this fetch succeeded
 			if (heatDataPromise && heatResult !== null) {
 				this.loadingStore.clearLayerError('heatData')
@@ -769,13 +879,17 @@ export default class ViewportBuildingLoader {
 
 			// Process buildings with pre-fetched heat data
 			const entities = await this.processBuildings(buildingData, tileKey, heatResult)
+			const entityCount = entities?.length || 0
 
-			// Track loaded tile
+			// Track loaded tile. An empty tile has no DataSource, so it records none
+			// and reconcileLoadedTiles leaves it alone.
 			this.loadedTiles.set(tileKey, {
 				bounds,
-				entityCount: entities?.length || 0,
+				entityCount,
 				loadedAt: Date.now(),
+				datasourceName: entityCount > 0 ? this.getTileDatasourceName(tileKey) : null,
 			})
+			this.tileFailureCounts.delete(tileKey)
 
 			logger.debug(`[ViewportBuildingLoader] ✅ Tile ${tileKey} loaded successfully`)
 		} catch (error) {
@@ -1198,6 +1312,51 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Name of a tile's DataSource in the current view mode.
+	 *
+	 * @param {string} tileKey - Tile key (format: "tileX_tileY")
+	 * @returns {string} DataSource name
+	 */
+	getTileDatasourceName(tileKey) {
+		const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY'
+		return `Buildings Viewport ${viewPrefix} ${tileKey}`
+	}
+
+	/**
+	 * Drop loaded tiles whose DataSource is no longer on the viewer.
+	 *
+	 * Postal-code navigation and the view-mode switch call
+	 * `datasourceService.removeDataSourcesAndEntities()`, which removes every
+	 * DataSource, the building tiles included. A tile left in `loadedTiles`
+	 * after that is skipped by `loadMissingTiles` and has nothing for
+	 * `updateTileVisibility` to show, so its area stays empty until a page
+	 * reload. Forgetting it here lets the same viewport update load it again.
+	 * The building store's features for the tile are evicted with it, so a
+	 * reload starts from the same state as a first load.
+	 *
+	 * @returns {string[]} Keys of the tiles that were dropped
+	 */
+	reconcileLoadedTiles() {
+		const dropped = []
+		for (const [tileKey, metadata] of this.loadedTiles) {
+			if (!metadata.datasourceName) continue
+			if (this.datasourceService.getDataSourceByName(metadata.datasourceName)) continue
+			dropped.push(tileKey)
+		}
+		for (const tileKey of dropped) {
+			this.loadedTiles.delete(tileKey)
+			this.visibleTiles.delete(tileKey)
+			this.buildingStore.evictPostalCode(tileKey)
+		}
+		if (dropped.length > 0) {
+			logger.debug(
+				`[ViewportBuildingLoader] ${dropped.length} tile DataSource(s) removed externally; reloading`
+			)
+		}
+		return dropped
+	}
+
+	/**
 	 * Set visibility of all loaded building datasources
 	 * Used when toggling statistical grid to hide/show buildings without unloading.
 	 *
@@ -1384,6 +1543,22 @@ export default class ViewportBuildingLoader {
 		// Cancel any pending prefetch operations
 		this.cancelPrefetch()
 		this.prefetchedTiles.clear()
+
+		if (this.reconcileTimeout) {
+			clearTimeout(this.reconcileTimeout)
+			this.reconcileTimeout = null
+		}
+		if (this.retryTimeout) {
+			clearTimeout(this.retryTimeout)
+			this.retryTimeout = null
+		}
+		this.tileFailureCounts.clear()
+		if (this.dataSourceRemovedHandler) {
+			this.viewer?.dataSources?.dataSourceRemoved?.removeEventListener(
+				this.dataSourceRemovedHandler
+			)
+			this.dataSourceRemovedHandler = null
+		}
 
 		// Remove camera event listener to prevent memory leaks
 		if (this.cameraMovedHandler && this.viewer?.camera?.moveEnd) {
