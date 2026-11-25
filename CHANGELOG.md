@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.60.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.12...r4c-cesium-viewer-v1.60.0) (2026-11-25)
+
+
+### Features
+
+* **ui:** remove switch to classic version link ([#1219](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1219)) ([32f56c0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/32f56c03af8a78fe0c73e18c350a9053ce770cef))
+
+
+### Bug Fixes
+
+* **search:** run the search on every input, not only on keyup ([#1222](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1222)) ([d4ef0d2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/d4ef0d22750e9d1cd56eb01f0b1363c2fc099847))
+
+
+### Performance Improvements
+
+* **buildings:** select building tiles from the visible ground, nearest first ([#1220](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1220)) ([8da411f](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/8da411f1779853234694a01a8d56fe33549c72a0))
+
 ## [1.59.12](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.11...r4c-cesium-viewer-v1.59.12) (2026-11-25)
 
 
