@@ -141,6 +141,10 @@ export default class ViewportBuildingLoader {
 		this.debounceTimeout = null
 		this.isInitialized = false
 		this.cameraMovedHandler = null
+		/** @type {((collection: unknown, dataSource: {name?: string}) => void)|null} Listener on viewer.dataSources.dataSourceRemoved */
+		this.dataSourceRemovedHandler = null
+		/** @type {ReturnType<typeof setTimeout>|null} Pending reconcile after external removal */
+		this.reconcileTimeout = null
 
 		// Cesium scratch objects for performance (reuse to avoid GC)
 		// Initialized lazily after Cesium is loaded
@@ -247,6 +251,16 @@ export default class ViewportBuildingLoader {
 		}
 		this.viewer.camera.moveEnd.addEventListener(this.cameraMovedHandler)
 
+		// A tile DataSource removed by other code (postal-code navigation, view
+		// switch) has to be loaded again even when the camera does not move after.
+		const dataSourceRemoved = this.viewer.dataSources?.dataSourceRemoved
+		if (dataSourceRemoved) {
+			this.dataSourceRemovedHandler = (_collection, dataSource) => {
+				this.handleDataSourceRemoved(dataSource)
+			}
+			dataSourceRemoved.addEventListener(this.dataSourceRemovedHandler)
+		}
+
 		this.isInitialized = true
 		logger.debug('[ViewportBuildingLoader] Camera listeners attached')
 
@@ -336,6 +350,28 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * React to a DataSource leaving the viewer.
+	 *
+	 * Removing all DataSources fires this once per DataSource, so the check is
+	 * coalesced into one task. The loader's own evictions delete the tile from
+	 * `loadedTiles` before that task runs, so they trigger no reload.
+	 *
+	 * @param {{name?: string}|undefined} dataSource - The removed DataSource
+	 * @private
+	 */
+	handleDataSourceRemoved(dataSource) {
+		if (!dataSource?.name?.startsWith('Buildings Viewport')) return
+		if (this.reconcileTimeout) return
+		this.reconcileTimeout = setTimeout(() => {
+			this.reconcileTimeout = null
+			if (!this.viewer || this.reconcileLoadedTiles().length === 0) return
+			this.updateViewport().catch((error) => {
+				logger.error('Failed to reload tiles removed externally:', error)
+			})
+		}, 0)
+	}
+
+	/**
 	 * Update camera velocity tracking for prefetch prioritization
 	 * Calculates direction and speed of camera movement.
 	 * @private
@@ -418,6 +454,9 @@ export default class ViewportBuildingLoader {
 			logger.debug(
 				`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles (${tilesInBounds.length} in bounds)`
 			)
+
+			// Forget tiles whose DataSource someone else removed, so they load again
+			this.reconcileLoadedTiles()
 
 			// Update visibility for loaded tiles
 			this.updateTileVisibility(requiredTileKeys)
@@ -769,12 +808,15 @@ export default class ViewportBuildingLoader {
 
 			// Process buildings with pre-fetched heat data
 			const entities = await this.processBuildings(buildingData, tileKey, heatResult)
+			const entityCount = entities?.length || 0
 
-			// Track loaded tile
+			// Track loaded tile. An empty tile has no DataSource, so it records none
+			// and reconcileLoadedTiles leaves it alone.
 			this.loadedTiles.set(tileKey, {
 				bounds,
-				entityCount: entities?.length || 0,
+				entityCount,
 				loadedAt: Date.now(),
+				datasourceName: entityCount > 0 ? this.getTileDatasourceName(tileKey) : null,
 			})
 
 			logger.debug(`[ViewportBuildingLoader] ✅ Tile ${tileKey} loaded successfully`)
@@ -1198,6 +1240,51 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
+	 * Name of a tile's DataSource in the current view mode.
+	 *
+	 * @param {string} tileKey - Tile key (format: "tileX_tileY")
+	 * @returns {string} DataSource name
+	 */
+	getTileDatasourceName(tileKey) {
+		const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY'
+		return `Buildings Viewport ${viewPrefix} ${tileKey}`
+	}
+
+	/**
+	 * Drop loaded tiles whose DataSource is no longer on the viewer.
+	 *
+	 * Postal-code navigation and the view-mode switch call
+	 * `datasourceService.removeDataSourcesAndEntities()`, which removes every
+	 * DataSource, the building tiles included. A tile left in `loadedTiles`
+	 * after that is skipped by `loadMissingTiles` and has nothing for
+	 * `updateTileVisibility` to show, so its area stays empty until a page
+	 * reload. Forgetting it here lets the same viewport update load it again.
+	 * The building store's features for the tile are evicted with it, so a
+	 * reload starts from the same state as a first load.
+	 *
+	 * @returns {string[]} Keys of the tiles that were dropped
+	 */
+	reconcileLoadedTiles() {
+		const dropped = []
+		for (const [tileKey, metadata] of this.loadedTiles) {
+			if (!metadata.datasourceName) continue
+			if (this.datasourceService.getDataSourceByName(metadata.datasourceName)) continue
+			dropped.push(tileKey)
+		}
+		for (const tileKey of dropped) {
+			this.loadedTiles.delete(tileKey)
+			this.visibleTiles.delete(tileKey)
+			this.buildingStore.evictPostalCode(tileKey)
+		}
+		if (dropped.length > 0) {
+			logger.debug(
+				`[ViewportBuildingLoader] ${dropped.length} tile DataSource(s) removed externally; reloading`
+			)
+		}
+		return dropped
+	}
+
+	/**
 	 * Set visibility of all loaded building datasources
 	 * Used when toggling statistical grid to hide/show buildings without unloading.
 	 *
@@ -1384,6 +1471,17 @@ export default class ViewportBuildingLoader {
 		// Cancel any pending prefetch operations
 		this.cancelPrefetch()
 		this.prefetchedTiles.clear()
+
+		if (this.reconcileTimeout) {
+			clearTimeout(this.reconcileTimeout)
+			this.reconcileTimeout = null
+		}
+		if (this.dataSourceRemovedHandler) {
+			this.viewer?.dataSources?.dataSourceRemoved?.removeEventListener(
+				this.dataSourceRemovedHandler
+			)
+			this.dataSourceRemovedHandler = null
+		}
 
 		// Remove camera event listener to prevent memory leaks
 		if (this.cameraMovedHandler && this.viewer?.camera?.moveEnd) {
