@@ -1,12 +1,23 @@
 // src/constants/viewport.js
+
+/**
+ * Camera height (m) above which the viewport loader loads no building tiles
+ * (#1213). The fog overlay (ADR-004) starts at the same height so the user can
+ * tell why the map has no buildings. A camera's nearest visible ground is never
+ * closer than its height, so a pitched camera gains nothing from a ground
+ * distance limit here.
+ */
+const MAX_CAMERA_HEIGHT_FOR_BUILDING_LOADS = 3000
+
 export const VIEWPORT = {
+	MAX_CAMERA_HEIGHT_FOR_BUILDING_LOADS,
 	MAX_CAMERA_HEIGHT_FOR_BUILDINGS: 50000, // meters
 	MAX_CAMERA_HEIGHT_FOR_TREES: 30000, // meters
 	DRAG_DETECTION_THRESHOLD_PX: 5,
 	CLICK_PICK_TOLERANCE_PX: 5,
 	MIN_ZOOM_FOR_DETAILS: 15,
 	// Fog effect thresholds - indicates buildings won't load until zoomed in
-	FOG_START_HEIGHT: 3000, // meters - fog begins appearing
+	FOG_START_HEIGHT: MAX_CAMERA_HEIGHT_FOR_BUILDING_LOADS, // meters - fog begins appearing where building loads stop
 	FOG_FULL_HEIGHT: 10000, // meters - fog reaches maximum density
 }
 

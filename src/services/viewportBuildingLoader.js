@@ -31,6 +31,7 @@
  * @see {@link module:services/unifiedLoader}
  */
 
+import { VIEWPORT } from '../constants/viewport.js'
 import { useBuildingStore } from '../stores/buildingStore.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -49,6 +50,7 @@ import { getCesium } from './cesiumProvider.js'
 import Datasource from './datasource.js'
 import unifiedLoader from './unifiedLoader.js'
 import Urbanheat from './urbanheat.js'
+import { footprintFromPicks, selectViewTiles } from './viewportTileSelection.js'
 
 /**
  * Configuration constants for viewport-based loading
@@ -66,8 +68,14 @@ const CONFIG = {
 	CONCURRENT_TILE_LOADS: 3,
 	/** Cache TTL for building tiles (1 hour) */
 	CACHE_TTL: 60 * 60 * 1000,
-	/** Maximum camera altitude (meters) for building loading - prevents mass loading at region overview */
-	MAX_ALTITUDE_FOR_LOADING: 3000,
+	/** Maximum camera altitude (meters) for building loading; the fog overlay starts here (ADR-004, #1213) */
+	MAX_ALTITUDE_FOR_LOADING: VIEWPORT.MAX_CAMERA_HEIGHT_FOR_BUILDING_LOADS,
+	/**
+	 * Furthest ground (horizontal metres from the camera) a building tile is
+	 * selected for. The 50-tile budget runs out at about 7 km for a pitched
+	 * camera at 1,500 m, so this bounds the tile search rather than the result.
+	 */
+	MAX_TILE_DISTANCE_M: 10000,
 	/** First retry delay for a failed tile load (ms); doubles per attempt */
 	RETRY_BASE_DELAY_MS: 2000,
 	/** Longest delay between tile load retries (ms) */
@@ -493,20 +501,9 @@ export default class ViewportBuildingLoader {
 				return
 			}
 
-			const bufferedBounds = this.expandBounds(viewportBounds, CONFIG.BUFFER_FACTOR)
-
-			// A pitched camera's view rectangle reaches towards the horizon and can
-			// cover hundreds of tiles (960 at pitch -25 from 1,500 m). Required tiles
-			// are never evicted, so keep only the ones nearest the view centre:
-			// otherwise the loader keeps adding DataSources past MAX_LOADED_TILES (#1054).
-			const tilesInBounds = this.getTilesInBounds(bufferedBounds)
-			const requiredTileKeys = this.selectNearestTiles(
-				tilesInBounds,
-				this.getRankingPoint(),
-				CONFIG.MAX_LOADED_TILES
-			)
+			const { keys: requiredTileKeys, examined } = this.selectRequiredTiles(viewportBounds)
 			logger.debug(
-				`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles (${tilesInBounds.length} in bounds)`
+				`[ViewportBuildingLoader] Viewport requires ${requiredTileKeys.length} tiles (${examined} examined)`
 			)
 
 			// Forget tiles whose DataSource someone else removed, so they load again
@@ -613,54 +610,53 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
-	 * Point the tile cap ranks tiles around: the ground under the canvas centre.
+	 * Tiles to keep loaded for the current view: at most MAX_LOADED_TILES of the
+	 * tiles on the visible ground, nearest the camera first (#1074, #1214).
 	 *
-	 * The point directly below a pitched camera is off-screen, so ranking by it
-	 * spends part of the tile budget on tiles nobody can see. Falls back to the
-	 * camera position when the centre ray misses the ellipsoid (sky in view).
+	 * The footprint comes from ground picks along the canvas border. When none
+	 * hit the ground, the buffered view rectangle stands in for it.
 	 *
-	 * @returns {{lat: number, lon: number}} Reference point in degrees
+	 * @param {{west: number, south: number, east: number, north: number}} viewportBounds - degrees
+	 * @returns {{keys: string[], examined: number}}
 	 */
-	getRankingPoint() {
+	selectRequiredTiles(viewportBounds) {
 		const Cesium = getCesium()
 		// Only called from updateViewport, which returns early without a live viewer
 		const { camera, scene } = /** @type {Cesium.Viewer} */ (this.viewer)
-		const centre = camera.pickEllipsoid(
-			new Cesium.Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2),
-			scene.globe.ellipsoid
-		)
-		const cartographic = centre
-			? Cesium.Cartographic.fromCartesian(centre)
-			: camera.positionCartographic
-		return {
-			lat: Cesium.Math.toDegrees(cartographic.latitude),
+		const ellipsoid = scene.globe.ellipsoid
+		const toLonLat = (cartographic) => ({
 			lon: Cesium.Math.toDegrees(cartographic.longitude),
+			lat: Cesium.Math.toDegrees(cartographic.latitude),
+		})
+		const pick = (x, y) => {
+			const position = camera.pickEllipsoid(new Cesium.Cartesian2(x, y), ellipsoid)
+			return position ? toLonLat(Cesium.Cartographic.fromCartesian(position)) : undefined
 		}
-	}
 
-	/**
-	 * Keep at most `limit` tile keys, nearest the given point first.
-	 *
-	 * @param {string[]} tileKeys - Candidate tile keys
-	 * @param {{lat: number, lon: number}} point - Reference point in degrees
-	 * @param {number} limit - Maximum number of tiles to keep
-	 * @returns {string[]} The kept tile keys
-	 */
-	selectNearestTiles(tileKeys, point, limit) {
-		if (tileKeys.length <= limit) {
-			return tileKeys
+		let footprint = footprintFromPicks(pick, scene.canvas.clientWidth, scene.canvas.clientHeight)
+		if (!footprint) {
+			const b = this.expandBounds(viewportBounds, CONFIG.BUFFER_FACTOR)
+			footprint = [
+				{ lon: b.west, lat: b.south },
+				{ lon: b.east, lat: b.south },
+				{ lon: b.east, lat: b.north },
+				{ lon: b.west, lat: b.north },
+			]
 		}
-		return tileKeys
-			.map((key) => ({ key, distance: this.getDistanceFromCenter(key, point) }))
-			.sort((a, b) => a.distance - b.distance)
-			.slice(0, limit)
-			.map(({ key }) => key)
+
+		return selectViewTiles({
+			footprint,
+			origin: toLonLat(camera.positionCartographic),
+			tileSize: CONFIG.TILE_SIZE,
+			limit: CONFIG.MAX_LOADED_TILES,
+			maxDistance: CONFIG.MAX_TILE_DISTANCE_M,
+		})
 	}
 
 	/**
 	 * Load tiles that are not yet loaded or loading
 	 * Respects concurrent loading limit and queues excess requests.
-	 * Uses center-out loading priority for better perceived performance.
+	 * Loads in the given order (nearest the camera first from updateViewport).
 	 *
 	 * @param {string[]} tileKeys - Required tile keys
 	 * @returns {Promise<void>}
@@ -679,32 +675,10 @@ export default class ViewportBuildingLoader {
 			return
 		}
 
-		// Get viewport bounds for center calculation
-		const viewportBounds = this.getViewportBounds()
-		if (!viewportBounds) {
-			logger.warn('[ViewportBuildingLoader] Cannot determine viewport center for priority sorting')
-			// Fall back to unsorted loading
-			this.loadingQueue = missingTiles
-			await this.processLoadingQueue()
-			return
-		}
-
-		// Calculate viewport center for distance-based priority
-		const viewportCenter = {
-			lat: (viewportBounds.north + viewportBounds.south) / 2,
-			lon: (viewportBounds.east + viewportBounds.west) / 2,
-		}
-
-		// Sort by distance from center (closest first)
-		missingTiles.sort(
-			(a, b) =>
-				this.getDistanceFromCenter(a, viewportCenter) -
-				this.getDistanceFromCenter(b, viewportCenter)
-		)
-
-		logger.debug(
-			`[ViewportBuildingLoader] Loading ${missingTiles.length} tiles (center-out priority)`
-		)
+		// tileKeys arrive nearest the camera first (selectRequiredTiles). Keep that
+		// order: near tiles cover most of the screen. Sorting by the view
+		// rectangle's centre fetched the horizon first on a pitched camera.
+		logger.debug(`[ViewportBuildingLoader] Loading ${missingTiles.length} tiles (nearest first)`)
 
 		this.loadingQueue = missingTiles
 		await this.processLoadingQueue()
