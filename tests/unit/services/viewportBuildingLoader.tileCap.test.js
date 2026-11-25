@@ -137,9 +137,9 @@ describe('ViewportBuildingLoader tile cap (#1054)', () => {
 		loadLayer.mockImplementation(async () => featureCollection())
 		// Prefetch is a separate cache-only path; keep it out of the count.
 		loader.featureFlagStore = { isEnabled: () => false }
-		// Styling and the fade-in animation are not under test.
+		// Styling and the reveal are not under test.
 		loader.setHSYBuildingAttributes = vi.fn(async () => {})
-		loader.fadeInDatasource = vi.fn(async (ds) => {
+		loader.revealDatasource = vi.fn((ds) => {
 			ds.show = true
 		})
 	})

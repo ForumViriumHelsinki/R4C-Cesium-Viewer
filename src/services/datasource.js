@@ -295,9 +295,14 @@ export default class DataSource {
 	 * @param {Object|string} data - GeoJSON data object or URL string
 	 * @param {string} name - Name for the data source
 	 * @param {boolean} [initialVisibility=true] - Initial visibility state for the datasource. Set to false for viewport-culled layers.
+	 * @param {Object} [options]
+	 * @param {(entities: Array<Cesium.Entity>) => (void|Promise<void>)} [options.beforeAdd] - Styles the
+	 *   entities before the data source joins the viewer. A data source in the viewer rebuilds its
+	 *   geometry batch on every frame in which its entities change; one that is not yet added has no
+	 *   visualizers, so styling it here costs one geometry build instead of one per change.
 	 * @returns {Promise<Array<Cesium.Entity>>} Promise resolving to array of entities
 	 */
-	async addDataSourceWithPolygonFix(data, name, initialVisibility = true) {
+	async addDataSourceWithPolygonFix(data, name, initialVisibility = true, { beforeAdd } = {}) {
 		// Validate data is not null/undefined
 		if (!data) {
 			logger.warn(`[DATASOURCE CREATE] No data provided for "${name}", returning empty array`)
@@ -391,6 +396,10 @@ export default class DataSource {
 					entity.polygon.arcType = new Cesium.ConstantProperty(Cesium.ArcType.GEODESIC)
 					entity.polygon.fill = new Cesium.ConstantProperty(true)
 				}
+			}
+
+			if (beforeAdd) {
+				await beforeAdd(loadedData.entities.values)
 			}
 
 			this.store.cesiumViewer.dataSources.add(loadedData)

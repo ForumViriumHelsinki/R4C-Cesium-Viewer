@@ -227,7 +227,8 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			expect(loader.datasourceService.addDataSourceWithPolygonFix).toHaveBeenCalledWith(
 				mockGeoJSON,
 				expect.stringContaining('Buildings Viewport'),
-				false
+				false,
+				{ beforeAdd: expect.any(Function) }
 			)
 		})
 
@@ -290,7 +291,7 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			// Update visibility - only first tile is visible
 			loader.updateTileVisibility(['2490_6010'])
 
-			// fadeInDatasource sets show=true synchronously, then starts async animation
+			// revealDatasource sets show=true synchronously
 			expect(datasource1.show).toBe(true)
 			expect(datasource2.show).toBe(false)
 		})
@@ -608,7 +609,8 @@ describe('ViewportBuildingLoader - Integration Tests', () => {
 			expect(loader.datasourceService.addDataSourceWithPolygonFix).toHaveBeenCalledWith(
 				mockGeoJSON,
 				'Buildings Viewport HSY 2490_6010',
-				false // Initially hidden
+				false, // Initially hidden
+				{ beforeAdd: expect.any(Function) } // Styled before it joins the viewer
 			)
 			expect(result).toEqual(mockEntities)
 		})

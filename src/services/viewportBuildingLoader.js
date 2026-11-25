@@ -16,7 +16,8 @@
  * Performance Optimizations:
  * - Uses Cesium's computeViewRectangle for efficient viewport calculation
  * - Reuses Cesium.Rectangle scratch objects to avoid GC pressure
- * - Batched entity visibility updates with requestRender()
+ * - Entities styled before their data source joins the viewer (one geometry build per tile)
+ * - Tiles shown by toggling DataSource.show, never by per-entity material changes
  * - Debounced camera events to prevent excessive updates
  * - LRU-style tile eviction when memory limit reached
  *
@@ -81,16 +82,6 @@ const PREFETCH_CONFIG = {
 	minIdleTime: 10,
 	/** Cooldown after user interaction before resuming prefetch (ms) */
 	cooldownMs: 1000,
-}
-
-/**
- * Configuration for fade animation
- */
-const FADE_CONFIG = {
-	/** Fade duration in milliseconds */
-	DURATION_MS: 300,
-	/** Number of animation steps */
-	STEPS: 10,
 }
 
 /**
@@ -642,8 +633,8 @@ export default class ViewportBuildingLoader {
 					this.activeLoads--
 					this.loadingTiles.delete(tileKey)
 
-					// Show the newly loaded tile with fade-in animation
-					// Skip fade-in if grid became active during load
+					// Show the newly loaded tile
+					// Keep it hidden if the grid became active during load
 					const viewPrefix = this.toggleStore.helsinkiView ? 'Helsinki' : 'HSY'
 					const datasourceName = `Buildings Viewport ${viewPrefix} ${tileKey}`
 					const datasource = this.datasourceService.getDataSourceByName(datasourceName)
@@ -654,9 +645,7 @@ export default class ViewportBuildingLoader {
 								`[ViewportBuildingLoader] Tile ${tileKey} loaded but hidden (grid active)`
 							)
 						} else {
-							this.fadeInDatasource(datasource).catch((error) => {
-								logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
-							})
+							this.revealDatasource(datasource)
 						}
 					}
 
@@ -891,7 +880,12 @@ export default class ViewportBuildingLoader {
 		const entities = await this.datasourceService.addDataSourceWithPolygonFix(
 			geojson,
 			datasourceName,
-			false // Start hidden, visibility controlled by updateTileVisibility
+			false, // Start hidden, visibility controlled by updateTileVisibility
+			{
+				// Style before the data source joins the viewer. Styling an added data
+				// source rebuilt its geometry batch once per yielded batch of entities.
+				beforeAdd: (loadedEntities) => this.styleTileEntities(loadedEntities, isHelsinkiView),
+			}
 		)
 
 		if (entities.length === 0) {
@@ -914,15 +908,7 @@ export default class ViewportBuildingLoader {
 				)
 				this.buildingStore.setBuildingFeatures(geojson, tileKey)
 			}
-			await this.setHeatExposureToBuildings(entities)
-			await this.setHelsinkiBuildingsHeight(entities)
-		} else {
-			// Capital Region (HSY): Different property names
-			await this.setHSYBuildingAttributes(entities)
 		}
-
-		// Note: Alpha is set to 0 by fadeInDatasource (after tile loading completes)
-		// Do NOT set alpha to 0 here - fadeInDatasource reads current alpha as target
 
 		// Populate building store for tooltip/hover info display
 		// Uses tileKey as cache key (similar to postal code in other loaders)
@@ -943,18 +929,27 @@ export default class ViewportBuildingLoader {
 	 * @returns {Promise<void>}
 	 */
 	async setHeatExposureToBuildings(entities) {
-		const batchSize = 25
+		await processBatchAdaptive(entities, (entity) => this.setBuildingEntityPolygon(entity), {
+			processorName: 'viewportHeatExposure',
+		})
+	}
 
-		for (let i = 0; i < entities.length; i += batchSize) {
-			const batch = entities.slice(i, i + batchSize)
-
-			for (let j = 0; j < batch.length; j++) {
-				this.setBuildingEntityPolygon(batch[j])
-			}
-
-			if (i + batchSize < entities.length) {
-				await new Promise((resolve) => requestIdle(resolve))
-			}
+	/**
+	 * Apply height and colour to a tile's entities.
+	 * Called by addDataSourceWithPolygonFix before the data source is added to the
+	 * viewer, so the batch yields cost no geometry rebuilds.
+	 *
+	 * @param {Array<Cesium.Entity>} entities - Building entities of one tile
+	 * @param {boolean} isHelsinkiView - Whether the tile holds Helsinki WFS buildings
+	 * @returns {Promise<void>}
+	 */
+	async styleTileEntities(entities, isHelsinkiView) {
+		if (isHelsinkiView) {
+			await this.setHeatExposureToBuildings(entities)
+			await this.setHelsinkiBuildingsHeight(entities)
+		} else {
+			// Capital Region (HSY): Different property names
+			await this.setHSYBuildingAttributes(entities)
 		}
 	}
 
@@ -1070,92 +1065,23 @@ export default class ViewportBuildingLoader {
 	}
 
 	/**
-	 * Fade in a datasource's entities smoothly
-	 * Animates entity alpha from 0 to target value over FADE_CONFIG.DURATION_MS
+	 * Show a tile's data source.
 	 *
-	 * Performance optimizations:
-	 * - Hoists JulianDate creation (single allocation instead of entities.length × steps)
-	 * - Pre-caches entity color data before animation loop
-	 * - Uses requestAnimationFrame for frame-aligned animation
-	 * - Reuses scratch Color object to reduce GC pressure
+	 * Replaces a 10-step alpha fade that assigned a new ColorMaterialProperty to
+	 * every entity per step. Each assignment fires the entity's definitionChanged,
+	 * and the GeometryVisualizer rebuilds the tile's whole geometry batch, so the
+	 * fade cost ten batch rebuilds and ten forced renders per tile while the user
+	 * was moving. Toggling `show` only updates a per-instance show attribute.
 	 *
 	 * @param {Cesium.DataSource} datasource - Datasource containing building entities
-	 * @returns {Promise<void>}
+	 * @returns {void}
 	 */
-	async fadeInDatasource(datasource) {
-		if (!datasource?.entities) return
-
-		const Cesium = getCesium()
-		const entities = datasource.entities.values
-		const stepDuration = FADE_CONFIG.DURATION_MS / FADE_CONFIG.STEPS
-
-		// OPTIMIZATION: Create JulianDate once (hoisted from inner loop)
-		const now = Cesium.JulianDate.now()
-
-		// Pre-cache entity color data before animation to avoid getValue() calls per frame
-		const entityData = []
-		for (const entity of entities) {
-			if (entity.polygon?.material) {
-				const material = /** @type {Cesium.ColorMaterialProperty} */ (entity.polygon.material)
-				const color = material.color?.getValue?.(now)
-				if (color) {
-					entityData.push({
-						entity,
-						r: color.red,
-						g: color.green,
-						b: color.blue,
-						targetAlpha: color.alpha,
-					})
-					// Set initial transparent state
-					entity.polygon.material = new Cesium.ColorMaterialProperty(
-						new Cesium.Color(color.red, color.green, color.blue, 0)
-					)
-				}
-			}
-		}
-
-		// Make datasource visible (entities are transparent)
+	revealDatasource(datasource) {
+		if (!datasource) return
 		datasource.show = true
-
-		// Use requestAnimationFrame for frame-aligned animation
-		return new Promise((resolve) => {
-			let step = 0
-
-			const animate = () => {
-				step++
-				const progress = step / FADE_CONFIG.STEPS
-
-				// Update all entities with pre-cached color data
-				for (const data of entityData) {
-					const currentAlpha = data.targetAlpha * progress
-					data.entity.polygon.material = new Cesium.ColorMaterialProperty(
-						new Cesium.Color(data.r, data.g, data.b, currentAlpha)
-					)
-				}
-
-				// Bail out of the animation loop if the viewer was destroyed
-				// while the fade-in chain was scheduled.
-				if (!this.viewer || this.viewer.isDestroyed?.()) {
-					resolve()
-					return
-				}
-
-				// Request render
-				this.viewer.scene.requestRender()
-
-				if (step < FADE_CONFIG.STEPS) {
-					// Schedule next frame with stepDuration delay
-					setTimeout(() => requestAnimationFrame(animate), stepDuration)
-				} else {
-					logger.debug(
-						`[ViewportBuildingLoader] ✨ Fade-in complete for ${entityData.length} entities`
-					)
-					resolve()
-				}
-			}
-
-			requestAnimationFrame(animate)
-		})
+		if (this.viewer && !this.viewer.isDestroyed?.()) {
+			this.viewer.scene.requestRender()
+		}
 	}
 
 	/**
@@ -1183,12 +1109,9 @@ export default class ViewportBuildingLoader {
 
 			// Only update if state changed
 			if (shouldBeVisible && !isCurrentlyVisible) {
-				// Fade in (async, non-blocking)
-				this.fadeInDatasource(datasource).catch((error) => {
-					logger.error(`Failed to fade in datasource for tile ${tileKey}:`, error)
-				})
+				this.revealDatasource(datasource)
 			} else if (!shouldBeVisible && isCurrentlyVisible) {
-				// Instant hide (no fade-out for performance)
+				// Hide
 				datasource.show = false
 			}
 		}
