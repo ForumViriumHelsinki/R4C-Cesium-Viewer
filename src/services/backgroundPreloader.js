@@ -1,4 +1,3 @@
-import { getRecentNDVIDates } from '../constants/ndviDates.js'
 import logger from '../utils/logger.js'
 import cacheService from './cacheService.js'
 import progressiveLoader from './progressiveLoader.js'
@@ -80,10 +79,9 @@ class BackgroundPreloader {
 		// nothing read their cache keys and every consumer fetched the same data
 		// itself. tests/unit/services/backgroundPreloader.test.js enforces this.
 
-		// Preload recent NDVI dates in background
-		// Use actual available dates instead of calculated dates
-		const ndviDates = getRecentNDVIDates(4)
-		await this.preloadNDVI(ndviDates, 'low') // Low priority, background only
+		// NDVI is not preloaded (#1083): the preload discarded its provider, so a
+		// date was reused only through the one-hour HTTP cache, at about 24 MB per
+		// date. changeTIFF loads the selected date when the layer is switched on.
 
 		// Start processing the queue
 		this.processPreloadQueue().catch((error) => {
@@ -206,52 +204,6 @@ class BackgroundPreloader {
 						loadDuration: Date.now() - startTime,
 					},
 				})
-			} else if (item.type === 'ndvi') {
-				// NDVI TIFF files - use TIFFImageryProvider to initialize and cache
-				const TIFFImageryProvider = (await import('tiff-imagery-provider')).default
-
-				const provider = await TIFFImageryProvider.fromUrl(item.url, {
-					tileSize: 512,
-					minimumLevel: 0,
-					maximumLevel: 12,
-					renderOptions: {
-						single: {
-							band: 1,
-							type: 'discrete',
-							useRealValue: true,
-							displayRange: [-1, 1],
-							colors: [
-								[-1.0, 'rgb(12, 12, 12)'],
-								[-0.5, 'rgb(234, 234, 234)'],
-								[0.0, 'rgb(204, 198, 130)'],
-								[0.1, 'rgb(145, 191, 81)'],
-								[0.2, 'rgb(112, 163, 63)'],
-								[0.3, 'rgb(79, 137, 45)'],
-								[0.4, 'rgb(48, 109, 28)'],
-								[0.5, 'rgb(15, 84, 10)'],
-								[0.6, 'rgb(0, 68, 0)'],
-							],
-						},
-					},
-				})
-
-				await provider.readyPromise
-
-				// Store minimal metadata about preloaded NDVI
-				await cacheService.setData(
-					item.key,
-					{ preloaded: true, url: item.url },
-					{
-						type: item.type,
-						ttl: item.ttl || 7 * 24 * 60 * 60 * 1000, // 7 days for NDVI
-						metadata: {
-							date: item.date,
-							preloaded: true,
-							preloadTime: Date.now(),
-							loadDuration: Date.now() - startTime,
-						},
-					}
-				)
 			} else {
 				// Simple fetch for other data types
 				const response = await fetch(item.url)
@@ -304,37 +256,6 @@ class BackgroundPreloader {
 				logger.error('Failed to process preload queue:', error)
 			})
 		}
-	}
-
-	/**
-	 * Preload NDVI data for given dates
-	 * @param {Array<string>} dates - Array of NDVI dates to preload (YYYY-MM-DD format)
-	 * @param {string} priority - Priority level: 'high', 'medium', 'low'
-	 */
-	async preloadNDVI(dates = [], priority = 'medium') {
-		const { useURLStore } = await import('../stores/urlStore.js')
-		const urlStore = useURLStore()
-
-		const ndviItems = dates.map((date) => ({
-			key: `ndvi-${date}`,
-			url: urlStore.ndviTiffUrl(date),
-			type: 'ndvi',
-			date: date,
-			priority: priority,
-			description: `NDVI imagery for ${date}`,
-			ttl: 7 * 24 * 60 * 60 * 1000, // 7 days cache
-		}))
-
-		ndviItems.forEach((item) => this.addToPreloadQueue(item))
-
-		// Process queue if not already running
-		if (!this.isPreloading) {
-			this.processPreloadQueue().catch((error) => {
-				logger.error('Failed to process preload queue:', error)
-			})
-		}
-
-		logger.debug(`Added ${dates.length} NDVI dates to preload queue`)
 	}
 
 	/**

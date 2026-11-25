@@ -48,28 +48,3 @@ export const AVAILABLE_NDVI_DATES = [
  * const selectedDate = userSelection || DEFAULT_NDVI_DATE;
  */
 export const DEFAULT_NDVI_DATE = '2022-06-26'
-
-/**
- * Get the most recent N NDVI dates for preloading
- * Returns dates in reverse chronological order (most recent first).
- * Useful for preloading recent vegetation data before user selection.
- *
- * @param {number} [count=4] - Number of recent dates to return
- * @returns {string[]} Array of ISO date strings in reverse chronological order
- *
- * @example
- * import { getRecentNDVIDates } from './constants/ndviDates.js';
- *
- * // Get 4 most recent dates (default)
- * const recent = getRecentNDVIDates();
- * // Returns: ['2025-06-20', '2024-06-27', '2023-06-23', '2022-06-26']
- *
- * @example
- * // Get 2 most recent dates
- * const twoRecent = getRecentNDVIDates(2);
- * // Returns: ['2025-06-20', '2024-06-27']
- */
-export function getRecentNDVIDates(count = 4) {
-	// Return the most recent dates (array is in chronological order)
-	return AVAILABLE_NDVI_DATES.slice(-count).reverse()
-}

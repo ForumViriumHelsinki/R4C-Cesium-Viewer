@@ -1,5 +1,6 @@
 import rasterio
 import numpy as np
+from convert_to_cog import write_cog
 from flask import jsonify
 from google.cloud import storage
 
@@ -58,9 +59,13 @@ def process_sentinel_ndvi(request):
     with rasterio.open('ndvi_temp.tiff', 'w', **ndvi_profile) as dst:
         dst.write(ndvi.astype(rasterio.float32), 1)
 
+    # The viewer reads only the tiles it shows from a COG; a stripped
+    # GeoTIFF is downloaded whole (#1083).
+    write_cog('ndvi_temp.tiff', 'ndvi_cog.tiff')
+
     # Upload the NDVI TIFF file to the bucket
     ndvi_blob = bucket.blob(f'NDVI/raster_data/{date_str}/ndvi_{date_str}.tiff')
-    ndvi_blob.upload_from_filename('ndvi_temp.tiff')
+    ndvi_blob.upload_from_filename('ndvi_cog.tiff')
 
     message = f"NDVI calculated and saved to: gs://{bucket_name}/NDVI/raster_data/{date_str}/ndvi_{date_str}.tiff"
     print(message)

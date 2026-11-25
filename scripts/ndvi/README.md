@@ -82,3 +82,20 @@ gcloud functions call calculate_average_ndvi --region europe-north1 --project fv
   \[ NDVI = (NIR - RED) / (NIR + RED) \]
 
 - Saves the computed NDVI raster as a TIFF file in Cloud Storage.
+
+## Serving NDVI rasters as Cloud Optimized GeoTIFFs
+
+The viewer loads `gs://ndvi_public/ndvi_<date>.tiff` through `/ndvi_public`. A
+stripped GeoTIFF is downloaded whole (about 24 MB per date); a COG is read tile
+by tile, about 1 MB for a postal-code or region view (#1083).
+`process_sentinel_ndvi` writes COGs. To convert existing files:
+
+1. `pip install rio-cogeo numpy`, then
+   `python scripts/ndvi/convert_to_cog.py out/ ndvi_*.tiff`. The script fails
+   unless each output is a valid COG with the same pixels as its input.
+2. Keep the originals: `gsutil -m cp 'gs://ndvi_public/ndvi_*.tiff' gs://ndvi_public/original-stripped/`
+3. Upload under the same names:
+   `gsutil -m -h 'Cache-Control:public, max-age=3600' -h 'Content-Type:image/tiff' cp out/ndvi_*.tiff gs://ndvi_public/`
+4. Check: `rio cogeo validate /vsicurl/https://storage.googleapis.com/ndvi_public/ndvi_2025-06-20.tiff`
+
+Browsers may serve the old file from cache for up to an hour after the upload.
