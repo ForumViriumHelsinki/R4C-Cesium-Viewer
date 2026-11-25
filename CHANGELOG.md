@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.60.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.60.0...r4c-cesium-viewer-v1.60.1) (2026-11-25)
+
+
+### Performance Improvements
+
+* **ndvi:** stop preloading NDVI and convert the rasters to COGs ([#1223](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1223)) ([6e1fb84](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/6e1fb84da0ae138ed9689c6f593fb4b0d158e5ad))
+
 ## [1.60.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.59.12...r4c-cesium-viewer-v1.60.0) (2026-11-25)
 
 
