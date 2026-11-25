@@ -136,7 +136,7 @@ describe('ViewportBuildingLoader reconciles loadedTiles with the viewer', () => 
 		loadLayer.mockImplementation(async () => featureCollection())
 		loader.featureFlagStore = { isEnabled: () => false }
 		loader.setHSYBuildingAttributes = vi.fn(async () => {})
-		loader.fadeInDatasource = vi.fn(async (ds) => {
+		loader.revealDatasource = vi.fn((ds) => {
 			ds.show = true
 		})
 		loader.viewer = makeViewer(rect, camera)

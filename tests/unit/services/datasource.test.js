@@ -313,3 +313,43 @@ describe(
 		})
 	}
 )
+
+describe(
+	'DataSource Service - addDataSourceWithPolygonFix beforeAdd hook',
+	{ tags: ['@unit', '@datasource'] },
+	() => {
+		beforeEach(() => {
+			setActivePinia(createPinia())
+			geoJsonLoad.mockReset()
+			dataSourcesAdd.mockReset()
+			vi.spyOn(console, 'log').mockImplementation(() => {})
+		})
+
+		afterEach(() => {
+			vi.restoreAllMocks()
+		})
+
+		it('styles the entities before the data source is added to the viewer', async () => {
+			const entities = [{ polygon: {} }, { polygon: {} }]
+			geoJsonLoad.mockResolvedValue({ name: '', show: undefined, entities: { values: entities } })
+			const order = []
+			dataSourcesAdd.mockImplementation(() => order.push('add'))
+			const beforeAdd = vi.fn(async (received) => {
+				await Promise.resolve()
+				order.push('beforeAdd')
+				expect(received).toBe(entities)
+			})
+
+			const result = await new DataSource().addDataSourceWithPolygonFix(
+				{ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {} }] },
+				'Buildings Viewport HSY 1_1',
+				false,
+				{ beforeAdd }
+			)
+
+			expect(beforeAdd).toHaveBeenCalledTimes(1)
+			expect(order).toEqual(['beforeAdd', 'add'])
+			expect(result).toBe(entities)
+		})
+	}
+)
