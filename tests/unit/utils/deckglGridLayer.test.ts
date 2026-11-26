@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GRID_ALPHA, gridLayerDefinition } from '@/utils/deckglGridLayer'
+import { GRID_ALPHA, GRID_URL, gridLayerDefinition } from '@/utils/deckglGridLayer'
 import { getGridFillColorRgba } from '@/utils/gridColorMapping'
 
 class GeoJsonLayer {
@@ -11,23 +11,22 @@ class GeoJsonLayer {
 const modules = { layers: { GeoJsonLayer } }
 const data = { type: 'FeatureCollection', features: [] }
 
-const ctxFor = (grid: any) => ({ state: { grid }, modules })
+const stateFor = (visible: boolean, statsIndex: string, loaded: boolean) => ({
+	grid: { visible, statsIndex },
+	geojson: loaded ? { [GRID_URL]: data } : {},
+})
+const ctxFor = (state: any) => ({ state, modules })
 
 describe('deckglGridLayer', () => {
+	it('asks for the grid data only while the grid is on', () => {
+		expect(gridLayerDefinition.dataUrl(stateFor(true, 'heat_index', false))).toBe(GRID_URL)
+		expect(gridLayerDefinition.dataUrl(stateFor(false, 'heat_index', false))).toBeNull()
+	})
+
 	it('is active only when the grid is on and its data has loaded', () => {
-		expect(
-			gridLayerDefinition.isActive(ctxFor({ visible: true, statsIndex: 'heat_index', data }) as any)
-		).toBe(true)
-		expect(
-			gridLayerDefinition.isActive(
-				ctxFor({ visible: false, statsIndex: 'heat_index', data }) as any
-			)
-		).toBe(false)
-		expect(
-			gridLayerDefinition.isActive(
-				ctxFor({ visible: true, statsIndex: 'heat_index', data: null }) as any
-			)
-		).toBe(false)
+		expect(gridLayerDefinition.isActive(ctxFor(stateFor(true, 'heat_index', true)))).toBe(true)
+		expect(gridLayerDefinition.isActive(ctxFor(stateFor(false, 'heat_index', true)))).toBe(false)
+		expect(gridLayerDefinition.isActive(ctxFor(stateFor(true, 'heat_index', false)))).toBe(false)
 	})
 
 	it('sits above the imagery layers', () => {
@@ -35,9 +34,7 @@ describe('deckglGridLayer', () => {
 	})
 
 	it('colours cells with the shared grid palette and recolours on index change', () => {
-		const layer: any = gridLayerDefinition.build(
-			ctxFor({ visible: true, statsIndex: 'green', data }) as any
-		)
+		const layer: any = gridLayerDefinition.build(ctxFor(stateFor(true, 'green', true)))
 		expect(layer.props.id).toBe('stats-grid')
 		expect(layer.props.data).toBe(data)
 		const props = { green: 0.4 }

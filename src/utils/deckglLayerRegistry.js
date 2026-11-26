@@ -19,6 +19,7 @@
  * @property {number} order - stacking order, bottom (low) to top (high)
  * @property {(ctx: Ctx) => boolean} isActive
  * @property {(ctx: Ctx) => unknown | unknown[] | null} build
+ * @property {(state: any) => string | null} [dataUrl] - GeoJSON the layer needs in this state
  */
 
 /**
@@ -51,6 +52,26 @@ export function createDeckLayerRegistry({ onError = () => {} } = {}) {
 
 		ids() {
 			return [...definitions.keys()]
+		},
+
+		/**
+		 * URLs of the GeoJSON files the layers need in this state, once each.
+		 * The host fetches them and hands the data back as `state.geojson`.
+		 * @param {any} state
+		 * @returns {string[]}
+		 */
+		dataUrls(state) {
+			const urls = new Set()
+			for (const def of definitions.values()) {
+				if (!def.dataUrl) continue
+				try {
+					const url = def.dataUrl(state)
+					if (url) urls.add(url)
+				} catch (error) {
+					onError(def.id, error)
+				}
+			}
+			return [...urls]
 		},
 
 		/**

@@ -6,6 +6,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { POSTAL_CODE_SOURCES } from '@/constants/postalCodeLayers'
 import { useGlobalStore } from '@/stores/globalStore'
 import { useToggleStore } from '@/stores/toggleStore'
 
@@ -40,6 +41,7 @@ vi.mock('@deck.gl/geo-layers', () => ({ TileLayer: Recorded }))
 const Cesium = await vi.importActual('cesium')
 vi.mock('@/services/cesiumProvider', () => ({ getCesium: () => Cesium }))
 
+const { GRID_URL } = await import('@/utils/deckglGridLayer')
 const { default: DeckGlMapView } = await import('@/components/DeckGlMapView.vue')
 
 /** Viewer stand-in with a real Cesium camera position and a setView that records. */
@@ -66,6 +68,7 @@ function fakeViewer() {
 }
 
 const layerIds = (deck) => deck.props.layers.map((l) => l.id)
+const fetchedUrls = () => fetch.mock.calls.map(([url]) => url)
 
 describe('DeckGlMapView', () => {
 	let viewer
@@ -79,6 +82,7 @@ describe('DeckGlMapView', () => {
 			'fetch',
 			vi.fn(async () => ({
 				ok: true,
+				headers: { get: () => 'application/json' },
 				json: async () => ({ type: 'FeatureCollection', features: [] }),
 			}))
 		)
@@ -96,7 +100,7 @@ describe('DeckGlMapView', () => {
 		expect(vs.longitude).toBeCloseTo(24.945, 4)
 		expect(vs.latitude).toBeCloseTo(60.17, 4)
 		expect(vs.pitch).toBeCloseTo(0, 4)
-		expect(layerIds(decks[0])).toEqual(['imagery-base'])
+		expect(layerIds(decks[0])).toEqual(['imagery-base', 'postal-codes'])
 		wrapper.unmount()
 	})
 
@@ -105,18 +109,32 @@ describe('DeckGlMapView', () => {
 		await flushPromises()
 		useToggleStore().landCover = true
 		await flushPromises()
-		expect(layerIds(decks[0])).toEqual(['imagery-base', 'imagery-landcover-2024'])
+		expect(layerIds(decks[0])).toEqual(['imagery-base', 'imagery-landcover-2024', 'postal-codes'])
 		wrapper.unmount()
 	})
 
 	it('fetches the grid once it is shown and draws it above the imagery', async () => {
 		const wrapper = mount(DeckGlMapView)
 		await flushPromises()
-		expect(fetch).not.toHaveBeenCalled()
+		expect(fetchedUrls()).not.toContain(GRID_URL)
 		useToggleStore().grid250m = true
 		await flushPromises()
-		expect(fetch).toHaveBeenCalledTimes(1)
-		expect(layerIds(decks[0])).toEqual(['imagery-base', 'stats-grid'])
+		expect(fetchedUrls().filter((u) => u === GRID_URL)).toHaveLength(1)
+		expect(layerIds(decks[0])).toEqual(['imagery-base', 'postal-codes', 'stats-grid'])
+		wrapper.unmount()
+	})
+
+	it('swaps the postal code areas with the navigation level and view', async () => {
+		const wrapper = mount(DeckGlMapView)
+		await flushPromises()
+		expect(fetchedUrls()).toEqual([POSTAL_CODE_SOURCES.capitalRegion.url])
+		useGlobalStore().setLevel('postalCode')
+		await flushPromises()
+		expect(layerIds(decks[0])).toEqual(['imagery-base'])
+		useToggleStore().setHelsinkiView(true)
+		await flushPromises()
+		expect(fetchedUrls()).toContain(POSTAL_CODE_SOURCES.helsinki.url)
+		expect(layerIds(decks[0])).toEqual(['imagery-base', 'postal-codes'])
 		wrapper.unmount()
 	})
 

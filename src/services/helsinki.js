@@ -1,3 +1,4 @@
+import { POSTAL_CODE_DATA_SOURCE, POSTAL_CODE_SOURCES } from '../constants/postalCodeLayers.js'
 import { useFeatureFlagStore } from '../stores/featureFlagStore'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -63,11 +64,8 @@ export default class Helsinki {
 			await this.buildingService.loadBuildings()
 		}
 
-		await this.datasourceService.loadGeoJsonDataSource(
-			0.0,
-			'/assets/data/hki_po_clipped.json',
-			'PostCodes'
-		)
+		const { url, fillOpacity } = POSTAL_CODE_SOURCES.helsinki
+		await this.datasourceService.loadGeoJsonDataSource(fillOpacity, url, POSTAL_CODE_DATA_SOURCE)
 		this.loadHelsinkiGreenElements().catch((error) => {
 			logger.error('[Helsinki] Failed to load green elements:', error)
 		})

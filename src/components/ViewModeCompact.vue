@@ -40,6 +40,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { POSTAL_CODE_DATA_SOURCE, POSTAL_CODE_SOURCES } from '../constants/postalCodeLayers.js'
 import Datasource from '../services/datasource.js'
 import FeaturePicker from '../services/featurepicker'
 import { setLandcoverEnabled } from '../services/landcover'
@@ -81,7 +82,8 @@ const setCapitalRegion = async () => {
 		await setLandcoverEnabled(false)
 	}
 	await dataSourceService.removeDataSourcesAndEntities()
-	await dataSourceService.loadGeoJsonDataSource(0.2, '/assets/data/hsy_po.json', 'PostCodes')
+	const { url, fillOpacity } = POSTAL_CODE_SOURCES.capitalRegion
+	await dataSourceService.loadGeoJsonDataSource(fillOpacity, url, POSTAL_CODE_DATA_SOURCE)
 
 	if (store.postalcode) {
 		featurePicker.loadPostalCode().catch((error) => {

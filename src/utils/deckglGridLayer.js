@@ -17,18 +17,22 @@ export const GRID_URL = '/assets/data/r4c_stats_grid_index.json'
  * @typedef {Object} GridState
  * @property {boolean} visible - toggleStore.grid250m
  * @property {string} statsIndex - propsStore.statsIndex
- * @property {any | null} data - grid FeatureCollection, null until loaded
  */
+
+/** @typedef {{grid: GridState, geojson: Record<string, any>}} State */
 
 export const gridLayerDefinition = {
 	id: 'stats-grid',
 	order: 100,
-	/** @param {{state: {grid: GridState}}} ctx */
-	isActive: (ctx) => Boolean(ctx.state.grid.visible && ctx.state.grid.data),
-	/** @param {{state: {grid: GridState}, modules: any}} ctx */
+	/** @param {State} state */
+	dataUrl: (state) => (state.grid.visible ? GRID_URL : null),
+	/** @param {{state: State}} ctx */
+	isActive: (ctx) => Boolean(ctx.state.grid.visible && ctx.state.geojson[GRID_URL]),
+	/** @param {{state: State, modules: any}} ctx */
 	build: (ctx) => {
 		const { GeoJsonLayer } = ctx.modules.layers
-		const { data, statsIndex } = ctx.state.grid
+		const { statsIndex } = ctx.state.grid
+		const data = ctx.state.geojson[GRID_URL]
 		return new GeoJsonLayer({
 			id: 'stats-grid',
 			data,

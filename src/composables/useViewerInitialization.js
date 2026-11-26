@@ -8,6 +8,7 @@
 import { ref } from 'vue'
 import { BASE_MAP_LAYER } from '../constants/basemaps.js'
 import { VIEWER_INIT_MESSAGES } from '../constants/errorMessages.js'
+import { POSTAL_CODE_DATA_SOURCE, POSTAL_CODE_SOURCES } from '../constants/postalCodeLayers.js'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useGraphicsStore } from '../stores/graphicsStore.js'
@@ -318,9 +319,10 @@ export function useViewerInitialization() {
 
 		logger.debug('[useViewerInitialization] 📮 Loading postal codes...')
 		const dataSourceService = new Datasource()
-		await dataSourceService.loadGeoJsonDataSource(0.2, '/assets/data/hsy_po.json', 'PostCodes')
+		const { url, fillOpacity } = POSTAL_CODE_SOURCES.capitalRegion
+		await dataSourceService.loadGeoJsonDataSource(fillOpacity, url, POSTAL_CODE_DATA_SOURCE)
 
-		const dataSource = await dataSourceService.getDataSourceByName('PostCodes')
+		const dataSource = await dataSourceService.getDataSourceByName(POSTAL_CODE_DATA_SOURCE)
 		const entities = dataSource?.entities?.values || []
 		logger.debug(
 			'[useViewerInitialization] ✅ Postal codes loaded, entities count:',

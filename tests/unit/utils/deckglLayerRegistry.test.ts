@@ -78,4 +78,53 @@ describe('deckglLayerRegistry', () => {
 		unregister()
 		expect(registry.buildLayers(ctx)).toEqual([])
 	})
+	it('collects the data URLs the active state asks for, once each, skipping nulls', () => {
+		const registry = createDeckLayerRegistry()
+		registry.register({
+			id: 'a',
+			order: 0,
+			isActive: () => true,
+			build: () => null,
+			dataUrl: () => '/a.json',
+		})
+		registry.register({
+			id: 'b',
+			order: 1,
+			isActive: () => true,
+			build: () => null,
+			dataUrl: () => null,
+		})
+		registry.register({
+			id: 'c',
+			order: 2,
+			isActive: () => true,
+			build: () => null,
+			dataUrl: () => '/a.json',
+		})
+		registry.register({ id: 'd', order: 3, isActive: () => true, build: () => null })
+		expect(registry.dataUrls(ctx.state)).toEqual(['/a.json'])
+	})
+
+	it('reports a dataUrl that throws and keeps collecting', () => {
+		const onError = vi.fn()
+		const registry = createDeckLayerRegistry({ onError })
+		registry.register({
+			id: 'bad',
+			order: 0,
+			isActive: () => true,
+			build: () => null,
+			dataUrl: () => {
+				throw new Error('x')
+			},
+		})
+		registry.register({
+			id: 'ok',
+			order: 1,
+			isActive: () => true,
+			build: () => null,
+			dataUrl: () => '/ok.json',
+		})
+		expect(registry.dataUrls(ctx.state)).toEqual(['/ok.json'])
+		expect(onError).toHaveBeenCalledWith('bad', expect.any(Error))
+	})
 })

@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getCesium } from '../services/cesiumProvider.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -27,9 +27,11 @@ import { useURLStore } from '../stores/urlStore.js'
 import { cesiumCameraToViewState } from '../utils/deckglCamera.js'
 import { createCameraSync } from '../utils/deckglCameraSync.js'
 import { readCesiumCamera } from '../utils/deckglCesiumBridge.js'
-import { GRID_URL, gridLayerDefinition } from '../utils/deckglGridLayer.js'
+import { createGeoJsonCache } from '../utils/deckglGeoJsonCache.js'
+import { gridLayerDefinition } from '../utils/deckglGridLayer.js'
 import { imageryLayerDefinition, readImageryState } from '../utils/deckglImagery.js'
 import { createDeckLayerRegistry } from '../utils/deckglLayerRegistry.js'
+import { postalCodeLayerDefinition } from '../utils/deckglPostalCodeLayer.js'
 import logger from '../utils/logger.js'
 
 const globalStore = useGlobalStore()
@@ -39,8 +41,14 @@ const backgroundMapStore = useBackgroundMapStore()
 const urlStore = useURLStore()
 
 const deckCanvas = ref(/** @type {HTMLCanvasElement | null} */ (null))
-/** Grid GeoJSON, fetched the first time the grid is shown. */
-const gridData = shallowRef(null)
+/** Bumped when a GeoJSON file finishes loading, so mapState recomputes. */
+const geojsonVersion = ref(0)
+const geojson = createGeoJsonCache({
+	onChange: () => {
+		geojsonVersion.value++
+	},
+	onError: (url, error) => logger.error(`[DeckGlMapView] failed to load ${url}:`, error),
+})
 
 /** Capital-region start view, used when no Cesium camera exists yet. */
 const FALLBACK_VIEW_STATE = { longitude: 24.945, latitude: 60.17, zoom: 10.5, pitch: 0, bearing: 0 }
@@ -49,17 +57,22 @@ const registry = createDeckLayerRegistry({
 	onError: (id, error) => logger.error(`[DeckGlMapView] layer "${id}" failed to build:`, error),
 })
 registry.register(imageryLayerDefinition)
+registry.register(postalCodeLayerDefinition)
 registry.register(gridLayerDefinition)
 
-/** Plain-value map state; the registry factories never read Pinia directly. */
-const mapState = computed(() => ({
+/** Plain-value store state; the registry factories never read Pinia directly. */
+const storeState = computed(() => ({
 	...readImageryState({ toggleStore, backgroundMapStore, urlStore }),
-	grid: {
-		visible: Boolean(toggleStore.grid250m),
-		statsIndex: propsStore.statsIndex,
-		data: gridData.value,
-	},
+	postalCodes: { level: globalStore.level, helsinkiView: Boolean(toggleStore.helsinkiView) },
+	grid: { visible: Boolean(toggleStore.grid250m), statsIndex: propsStore.statsIndex },
 }))
+/** GeoJSON files the active layers need, fetched once each. */
+const dataUrls = computed(() => registry.dataUrls(storeState.value))
+const mapState = computed(() => {
+	geojsonVersion.value // re-read the cache when a file loads
+	const loaded = Object.fromEntries(dataUrls.value.map((url) => [url, geojson.get(url)]))
+	return { ...storeState.value, geojson: loaded }
+})
 
 let deck = null
 let modules = null
@@ -68,7 +81,6 @@ let cameraSync = null
 // Guards the lazy imports resolving after unmount (flag flipped off mid-load),
 // which would otherwise leave a Deck nothing finalizes.
 let isMounted = true
-let gridFetch = null
 
 function viewport() {
 	const canvas = deckCanvas.value
@@ -90,28 +102,10 @@ function renderLayers() {
 	deck.setProps({ layers: registry.buildLayers({ state: mapState.value, modules }) })
 }
 
-function loadGridData() {
-	if (gridData.value || gridFetch) return
-	gridFetch = fetch(GRID_URL)
-		.then((response) => {
-			if (!response.ok) throw new Error(`Grid fetch failed: HTTP ${response.status}`)
-			return response.json()
-		})
-		.then((json) => {
-			if (isMounted) gridData.value = json
-		})
-		.catch((error) => {
-			logger.error('[DeckGlMapView] failed to load the statistics grid:', error)
-		})
-		.finally(() => {
-			gridFetch = null
-		})
-}
-
-const stopGridWatch = watch(
-	() => toggleStore.grid250m,
-	(visible) => {
-		if (visible) loadGridData()
+const stopDataWatch = watch(
+	dataUrls,
+	(urls) => {
+		for (const url of urls) geojson.request(url)
 	},
 	{ immediate: true }
 )
@@ -173,7 +167,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
 	isMounted = false
-	stopGridWatch()
+	stopDataWatch()
+	geojson.dispose()
 	stopStateWatch()
 	stopViewerWatch()
 	// Keep the view when the flag turns off: dispose applies any deck move not
