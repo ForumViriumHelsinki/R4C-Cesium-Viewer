@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.61.0](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.60.2...r4c-cesium-viewer-v1.61.0) (2026-11-26)
+
+
+### Features
+
+* **adaptation:** clarify cooling center placement and list placed centers ([#1237](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1237)) ([ce78ab1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/ce78ab16a904030d0fcbbeac20e95569ee2599a2))
+* **deckgl:** draw postal code areas in the deck.gl renderer ([#1248](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1248)) ([837790a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/837790a9326227ba2e004ea1485fd0e2ac3d1e01))
+* **deckgl:** render the whole map with deck.gl behind the renderer flag ([#1245](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1245)) ([7d86aa8](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/7d86aa81a20c81826b54c0aee114765c254f2564))
+
+
+### Bug Fixes
+
+* building tile removal, deck.gl WMS tile errors and early vibrate ([1315822](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/131582263f19a32ef4e30eefb61f53138e637526)), closes [#1227](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1227) [#1228](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1228) [#1229](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1229)
+* **deckgl:** loosen wmsBitmapSubLayerProps types for vue-tsc ([bc98c9a](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/bc98c9ae5ee7e2200cd4276a561fd28005708b12))
+
 ## [1.60.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.60.1...r4c-cesium-viewer-v1.60.2) (2026-11-26)
 
 
