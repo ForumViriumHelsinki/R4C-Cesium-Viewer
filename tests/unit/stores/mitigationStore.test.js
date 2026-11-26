@@ -76,3 +76,39 @@ describe('mitigationStore — null/undefined property guards (#828)', () => {
 		})
 	})
 })
+
+describe('mitigationStore — cooling center identity', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('gives each added center a unique id and returns the stored record', () => {
+		const store = useMitigationStore()
+		const a = store.addCoolingCenter({ grid_id: 'g1', euref_x: 0, euref_y: 0, capacity: 100 })
+		const b = store.addCoolingCenter({ grid_id: 'g1', euref_x: 0, euref_y: 0, capacity: 200 })
+		expect(a.id).toBeDefined()
+		expect(a.id).not.toBe(b.id)
+		expect(store.coolingCenters).toEqual([a, b])
+	})
+
+	it('removes only the center with the given id and bumps the version', () => {
+		const store = useMitigationStore()
+		const a = store.addCoolingCenter({ grid_id: 'g1', euref_x: 0, euref_y: 0, capacity: 100 })
+		const b = store.addCoolingCenter({ grid_id: 'g2', euref_x: 0, euref_y: 0, capacity: 200 })
+		const version = store.coolingCentersVersion
+
+		const removed = store.removeCoolingCenter(a.id)
+
+		expect(removed).toEqual(a)
+		expect(store.coolingCenters).toEqual([b])
+		expect(store.coolingCentersVersion).toBe(version + 1)
+	})
+
+	it('ignores an unknown id', () => {
+		const store = useMitigationStore()
+		store.addCoolingCenter({ grid_id: 'g1', euref_x: 0, euref_y: 0, capacity: 100 })
+		const version = store.coolingCentersVersion
+		expect(store.removeCoolingCenter('nope')).toBeNull()
+		expect(store.coolingCentersVersion).toBe(version)
+	})
+})

@@ -176,8 +176,8 @@ describe('LandcoverToParks Component', () => {
 		})
 
 		it('should display the correct title', () => {
-			const title = wrapper.find('.v-card-title')
-			expect(title.text()).toBe('Create Parks')
+			const title = wrapper.find('h3')
+			expect(title.text()).toBe('Create parks')
 		})
 
 		it('should show the initial Select button', () => {

@@ -40,7 +40,10 @@ import logger from '../utils/logger.js'
  * @property {number} euref_x - EUREF-FIN X coordinate
  * @property {number} euref_y - EUREF-FIN Y coordinate
  * @property {string|number} [grid_id] - Grid cell identifier the center sits in
- * @property {number} [capacity] - Cooling capacity of the center
+ * @property {number} [capacity] - Capacity of the center, in people
+ * @property {number} [id] - Assigned by addCoolingCenter; key for removeCoolingCenter
+ * @property {number} [slot] - Marker offset slot within the grid cell
+ * @property {string} [entityId] - Id of the center's Cesium entity in `cooling_centers`
  */
 
 /**
@@ -67,6 +70,8 @@ export const useMitigationStore = defineStore('mitigation', {
 		coolingCenters: [],
 		/** Version counter for coolingCenters - increment when array changes to enable efficient watching */
 		coolingCentersVersion: 0,
+		/** Next id handed out by addCoolingCenter; never reused within a session */
+		nextCoolingCenterId: 1,
 		reachability: 1000,
 		maxReduction: 0.2,
 		minReduction: 0.04,
@@ -311,9 +316,28 @@ export const useMitigationStore = defineStore('mitigation', {
 				{ processorName: 'gridImpacts' }
 			)
 		},
+		/**
+		 * Adds a cooling center and assigns it an id.
+		 * @param {CoolingCenter} coolingCenter
+		 * @returns {CoolingCenter} the stored record, with its id
+		 */
 		addCoolingCenter(coolingCenter) {
-			this.coolingCenters.push(coolingCenter)
+			const record = { ...coolingCenter, id: this.nextCoolingCenterId++ }
+			this.coolingCenters.push(record)
 			this.coolingCentersVersion++
+			return record
+		},
+		/**
+		 * Removes one cooling center by id.
+		 * @param {number} id
+		 * @returns {CoolingCenter | null} the removed record, or null if none matched
+		 */
+		removeCoolingCenter(id) {
+			const index = this.coolingCenters.findIndex((center) => center.id === id)
+			if (index === -1) return null
+			const [removed] = this.coolingCenters.splice(index, 1)
+			this.coolingCentersVersion++
+			return removed
 		},
 		addCell(id) {
 			if (!this.affected.includes(id)) {
