@@ -8,7 +8,7 @@ audit: ../audits/2026-W19-user-stories.md
 
 # Journey 1 — Onboarding & first load
 
-The persona arrives at `https://r4c.dataportal.fi/?ui=new`. The `?ui=new` switch selects the current frontend; without it the hostname serves the frozen legacy release (ADR-008). Before any analysis they must:
+The persona arrives at `https://r4c.dataportal.fi/`. Before any analysis they must:
 
 1. Dismiss the disclaimer (only once per "reasonable window").
 2. See an interactive map (Cesium ready, default imagery loaded).
@@ -22,7 +22,7 @@ The persona arrives at `https://r4c.dataportal.fi/?ui=new`. The `?ui=new` switch
 journey
     title First-load journey (R4C beta v1.48.0)
     section Arrival
-      Open r4c.dataportal.fi/?ui=new: 5: User
+      Open r4c.dataportal.fi: 5: User
       See disclaimer modal: 3: User
       Dismiss disclaimer: 3: User
     section App ready
