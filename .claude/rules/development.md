@@ -67,11 +67,13 @@ bun run lint     # Biome check
 bun run lint:fix # Biome auto-fix
 ```
 
-`bun run build` ends with a precompression step (`scripts/precompress.mjs`,
-gzip-9 over `dist/` — ~−77% on compressible assets); nginx serves the `.gz`
-siblings via `gzip_static`. If a build artifact seems stale or doubled, check
-for orphaned `.gz` files. Brotli precompression is blocked on a
-brotli-capable nginx image — tracked in issue #876.
+`bun run build` ends with a precompression step (`scripts/precompress.mjs`)
+that writes a gzip-9 `.gz` and a brotli-11 `.br` sibling for each large
+compressible file in `dist/`. nginx serves them with `gzip_static` and
+`brotli_static` (the image compiles `ngx_brotli`, #876), so a browser that
+accepts `br` gets the `.br`. Sentry's large-payload size is the brotli size:
+the `hsy_po.json` event reported exactly its brotli-11 size (#1235). If a build
+artifact seems stale or doubled, check for orphaned `.gz` or `.br` files.
 
 ## Dev and Preview Servers Bind to Loopback
 
