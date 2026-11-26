@@ -4,11 +4,12 @@ This folder contains documentation for the data models and GeoJSON structures us
 
 ## Contents
 
-| Document                                           | Description                                                                                           |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [BUILDING_PROPERTIES.md](./BUILDING_PROPERTIES.md) | Comprehensive reference for all building GeoJSON properties                                           |
-| [GRID_INDEX.md](./GRID_INDEX.md)                   | 250 m stats grid (`r4c_stats_grid_index.json`) properties, slimming, and upstream-pipeline adoption   |
-| [VTT_FLOOD_API.md](./VTT_FLOOD_API.md)             | VTT flood-simulation API: request contract, frame range, cell properties and their observed behaviour |
+| Document                                           | Description                                                                                            |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [BUILDING_PROPERTIES.md](./BUILDING_PROPERTIES.md) | Comprehensive reference for all building GeoJSON properties                                            |
+| [GRID_INDEX.md](./GRID_INDEX.md)                   | 250 m stats grid (`r4c_stats_grid_index.json`) properties, slimming, and upstream-pipeline adoption    |
+| [POSTAL_CODE_AREAS.md](./POSTAL_CODE_AREAS.md)     | Postal code areas (`hsy_po.json`): HSY source dataset and edition, properties added here, other copies |
+| [VTT_FLOOD_API.md](./VTT_FLOOD_API.md)             | VTT flood-simulation API: request contract, frame range, cell properties and their observed behaviour  |
 
 ## Quick Reference
 
