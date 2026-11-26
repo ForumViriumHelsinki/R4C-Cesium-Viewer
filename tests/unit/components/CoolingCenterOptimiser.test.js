@@ -227,9 +227,8 @@ describe('CoolingCenterOptimiser Component', () => {
 		})
 
 		it('should display the correct title', () => {
-			const title = wrapper.find('.v-card-title')
-			expect(title.text()).toContain('Cooling Center')
-			expect(title.text()).toContain('Optimization')
+			const title = wrapper.find('h3')
+			expect(title.text()).toBe('Optimize locations')
 		})
 
 		it('should initialize with default number of cooling centers', () => {
@@ -243,7 +242,7 @@ describe('CoolingCenterOptimiser Component', () => {
 
 		it('should display the optimize button', () => {
 			const button = wrapper.find('.v-btn')
-			expect(button.text()).toBe('Optimise Locations')
+			expect(button.text()).toBe('Optimize locations')
 		})
 	})
 
@@ -314,6 +313,8 @@ describe('CoolingCenterOptimiser Component', () => {
 				euref_x: 1500,
 				euref_y: 2500,
 				capacity: 1000,
+				// Stored with the record so the Centers list can remove this marker.
+				entityId: expect.stringMatching(/^cooling_grid_002_\d+$/),
 			})
 
 			// A visual box entity was added for the resolved center. Note
@@ -460,6 +461,8 @@ describe('CoolingCenterOptimiser Component', () => {
 				euref_x: 1500,
 				euref_y: 2500,
 				capacity: 1000,
+				// Stored with the record so the Centers list can remove this marker.
+				entityId: expect.stringMatching(/^cooling_test_grid_\d+$/),
 			})
 		})
 

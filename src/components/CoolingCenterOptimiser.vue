@@ -1,36 +1,43 @@
 <template>
-	<v-container class="cooling-center-optimisation">
-		<v-card
-			elevation="2"
-			class="pa-4"
-		>
-			<v-card-title
-				>Cooling Center <br />
-				Optimization</v-card-title
+	<AdaptationToolSection
+		class="cooling-center-optimisation"
+		title="Optimize locations"
+		description="Place a set of cooling centers automatically in the grid cells with the highest heat. Replaces any centers already placed."
+	>
+		<div class="d-flex align-center justify-space-between mb-1">
+			<span
+				id="optimiser-count-label"
+				class="text-caption"
 			>
+				Number of centers
+			</span>
+			<span class="text-caption font-weight-medium">{{ numCoolingCenters }}</span>
+		</div>
+		<v-slider
+			v-model="numCoolingCenters"
+			min="1"
+			max="50"
+			step="1"
+			color="primary"
+			density="compact"
+			hide-details
+			aria-labelledby="optimiser-count-label"
+		/>
+		<div class="d-flex justify-space-between text-caption text-medium-emphasis mb-3">
+			<span>1</span>
+			<span>50</span>
+		</div>
 
-			<v-label class="mb-2"> Number of Cooling Centers </v-label>
-			<br /><br />
-			<v-slider
-				v-model="numCoolingCenters"
-				min="1"
-				max="50"
-				step="1"
-				thumb-label="always"
-				class="mt-2"
-			/>
-
-			<v-col cols="12">
-				<v-btn
-					color="success"
-					class="mt-2 text-none"
-					@click="findOptimalCoolingCenters"
-				>
-					Optimise Locations
-				</v-btn>
-			</v-col>
-		</v-card>
-	</v-container>
+		<v-btn
+			block
+			color="primary"
+			prepend-icon="mdi-auto-fix"
+			class="text-none"
+			@click="findOptimalCoolingCenters"
+		>
+			Optimize locations
+		</v-btn>
+	</AdaptationToolSection>
 </template>
 
 <script setup>
@@ -40,6 +47,7 @@ import { getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useMitigationStore } from '../stores/mitigationStore'
 import logger from '../utils/logger.js'
+import AdaptationToolSection from './AdaptationToolSection.vue'
 
 const numCoolingCenters = ref(25)
 const mitigationStore = useMitigationStore()
@@ -194,14 +202,15 @@ const addCoolingCenter = (entity) => {
 	const gridId = entity.properties.grid_id?.getValue()
 	const euref_x = entity.properties.euref_x?.getValue()
 	const euref_y = entity.properties.euref_y?.getValue()
-	mitigationStore.addCoolingCenter({ grid_id: gridId, euref_x, euref_y, capacity: 1000 })
+	const entityId = `cooling_${gridId}_${mitigationStore.getCoolingCenterCount(gridId) + 1}`
+	mitigationStore.addCoolingCenter({ grid_id: gridId, euref_x, euref_y, capacity: 1000, entityId })
 
 	const cartesianPosition = getEntityCentroid(entity)
 	if (!cartesianPosition) return // Stop if centroid could not be calculated
 
 	const dimension = 160 // Simplified
 	coolingCentersDataSource.entities.add({
-		id: `cooling_${gridId}_${mitigationStore.getCoolingCenterCount(gridId)}`,
+		id: entityId,
 		position: cartesianPosition,
 		box: {
 			dimensions: new Cesium.Cartesian3(dimension, dimension, dimension),

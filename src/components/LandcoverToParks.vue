@@ -1,11 +1,9 @@
 <template>
-	<v-container class="landcover-to-parks">
-		<v-card
-			elevation="2"
-			class="pa-4"
-		>
-			<v-card-title>Create Parks</v-card-title>
-			<v-card-text>
+	<AdaptationToolSection
+		class="landcover-to-parks"
+		title="Create parks"
+	>
+		<div>
 				<p class="text-caption mb-4">
 					Grid cells are colored by {{ inSentence(SURFACE_HEAT_INDEX) }}: blue is cool, red is
 					hot. Select a cell to load convertible landcover areas.
@@ -94,9 +92,8 @@
 						</tbody>
 					</v-table>
 				</div>
-			</v-card-text>
-		</v-card>
-	</v-container>
+		</div>
+	</AdaptationToolSection>
 </template>
 
 <script setup>
@@ -110,6 +107,7 @@ import { useMitigationStore } from '../stores/mitigationStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useURLStore } from '../stores/urlStore.js'
 import logger from '../utils/logger.js'
+import AdaptationToolSection from './AdaptationToolSection.vue'
 
 // --- STATE MANAGEMENT ---
 const globalStore = useGlobalStore()
