@@ -40,8 +40,11 @@ vegetation_m2_2022   water_m2_2022
 > sibling `public/assets/data/hsy_po.json` (postal-code landcover, loaded as
 > `propsStore.postalCodeData`) carries `*_m2_2016..2024` keys that **are**
 > consumed by `PieChart.vue` (dynamic `` `${key}_${year}` ``) and `ndvi_*` keys
-> consumed by `NDVIChart.vue`. **Do not slim `hsy_po.json`.** The drop applies
-> only to the grid index, whose own consumers never read these keys.
+> consumed by `NDVIChart.vue`. **Do not drop properties from `hsy_po.json`.** The
+> drop applies only to the grid index, whose own consumers never read these keys.
+> `hsy_po.json` is slimmed differently: `scripts/slim-hsy-po.mjs` rounds its
+> coordinates to 6 decimals and minifies it, leaving every property in place
+> (`tests/unit/data/hsy-po-slim.test.js`).
 
 ### How the served file is slimmed
 
