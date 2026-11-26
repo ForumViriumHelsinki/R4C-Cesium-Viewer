@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.60.2](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.60.1...r4c-cesium-viewer-v1.60.2) (2026-11-26)
+
+
+### Bug Fixes
+
+* **sentry:** report production to the Terraform-managed r4c-cesium-viewer project ([#1232](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1232)) ([15d3757](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/15d3757cb1deba104e4cf61e62d98f5677061845))
+
+
+### Performance Improvements
+
+* **data:** round hsy_po.json coordinates and minify it ([#1236](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/issues/1236)) ([a907177](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/commit/a907177a53901a489aed62a318aace1c5697d080))
+
 ## [1.60.1](https://github.com/ForumViriumHelsinki/R4C-Cesium-Viewer/compare/r4c-cesium-viewer-v1.60.0...r4c-cesium-viewer-v1.60.1) (2026-11-25)
 
 
