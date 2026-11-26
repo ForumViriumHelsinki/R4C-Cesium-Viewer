@@ -294,7 +294,8 @@ override via FeatureFlagsPanel) switches the **whole map** from Cesium to one
 deck.gl 9.x `MapView` (ADR-012); renderers are never mixed per layer.
 `src/components/DeckGlMapView.vue` owns the single `Deck`; each layer type is a
 factory in a layer registry (`src/utils/deckglLayerRegistry.js`) that reads plain
-store state: imagery in `deckglImagery.js`, the grid in `deckglGridLayer.js`. The
+store state: imagery in `deckglImagery.js`, postal code areas in
+`deckglPostalCodeLayer.js`, the grid in `deckglGridLayer.js`. The
 camera converts through `deckglCamera.js`; `deckglCameraSync.js` keeps the hidden
 Cesium camera in step both ways, so the URL, search and zoom controls follow deck.
 A layer not yet ported is absent in deck.gl mode. Grid spike verdict (PR #879):
@@ -304,7 +305,12 @@ Cesium's 1.25 MB.
 - **Adding a layer**: write a registry definition (`id`, `order`, `isActive`,
   `build`) that takes deck modules from `ctx.modules`, never by import, and
   register it in `DeckGlMapView`. Put the style decision in a pure function both
-  renderers call.
+  renderers call, and file URLs and opacities in a constant both read
+  (`constants/postalCodeLayers.js`).
+- **GeoJSON data**: a definition names the file it needs in the current state
+  with `dataUrl(state)`. The host fetches each named URL once
+  (`deckglGeoJsonCache.js`) and passes the result back as `state.geojson[url]`;
+  `isActive` checks it is there. Do not fetch inside a definition.
 - **Tile layers fetch in `getTileData`**: return the decoded image (or data), not
   a URL, and pass `tile.signal` (`fetchTileBitmap` in `deckglImagery.js`). A URL
   marks the tile loaded at once, which bypasses TileLayer's throttling, leaves
