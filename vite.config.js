@@ -324,7 +324,8 @@ export default defineConfig(({ mode }) => {
 						sentryVitePlugin({
 							authToken: env.SENTRY_AUTH_TOKEN,
 							org: 'forum-virium-helsinki',
-							project: 'regions4climate',
+							// Terraform-managed project (infrastructure/sentry, #1230)
+							project: 'r4c-cesium-viewer',
 						}),
 					]
 				: []),

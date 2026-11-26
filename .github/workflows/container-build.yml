@@ -37,7 +37,7 @@ jobs:
     secrets:
       secret-build-args: |
         SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-        VITE_SENTRY_DSN=${{ secrets.VITE_SENTRY_DSN }}
+        VITE_SENTRY_DSN=${{ secrets.SENTRY_DSN }}
     permissions:
       contents: read
       packages: write
