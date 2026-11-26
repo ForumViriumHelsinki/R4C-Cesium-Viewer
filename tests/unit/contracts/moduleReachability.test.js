@@ -28,6 +28,10 @@ const ALLOWED_UNREACHABLE = {
 	'src/utils/entityHelpers.js': 'imported only by its unit test; adopt or delete (follow-up)',
 	'src/utils/wmsRequestCache.js':
 		'imported only by its unit test, though docs/WMS_REQUEST_OPTIMIZATION.md describes it as active; wire in or delete (follow-up)',
+	'src/utils/deckglCamera.js':
+		'deck.gl map host (step 1 of the deck.gl renderer plan) wires it in once #1244 has merged; remove this entry then',
+	'src/utils/deckglLayerRegistry.js':
+		'deck.gl map host (step 1 of the deck.gl renderer plan) wires it in once #1244 has merged; remove this entry then',
 }
 
 const { files, reachable } = buildSourceGraph()
