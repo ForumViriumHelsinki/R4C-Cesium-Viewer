@@ -93,11 +93,12 @@
 		<v-main>
 			<CesiumViewer />
 			<!--
-			  Grid renderer A/B (r4c-deckgl-renderer flag, default OFF):
-			  flag OFF -> Cesium grid (SosEco250mGrid); flag ON -> deck.gl overlay.
+			  Renderer switch (r4c-deckgl-renderer flag, default OFF, ADR-012):
+			  flag OFF -> Cesium renders everything; flag ON -> the deck.gl map
+			  covers the whole view at every level.
 			-->
 			<SosEco250mGrid v-if="grid250m && !deckGlRenderer" />
-			<DeckGlGridView v-if="grid250m && deckGlRenderer" />
+			<DeckGlMapView v-if="deckGlRenderer" />
 
 			<!-- Map Overlay Controls (right side) -->
 			<!-- MapOverlayControls provides zoom/compass controls. -->
@@ -146,10 +147,10 @@ import { useSidebarOffset } from './composables/useSidebarOffset'
 // Lazy-loaded components
 const TimelineCompact = defineAsyncComponent(() => import('./components/TimelineCompact.vue'))
 const SosEco250mGrid = defineAsyncComponent(() => import('./components/SosEco250mGrid.vue'))
-// deck.gl renderer spike — lazy so the deck.gl bundle is NOT paid while the
+// deck.gl map renderer — lazy so the deck.gl bundle is NOT paid while the
 // r4c-deckgl-renderer flag is off (the v-if never mounts it, so its dynamic
 // import never fires).
-const DeckGlGridView = defineAsyncComponent(() => import('./components/DeckGlGridView.vue'))
+const DeckGlMapView = defineAsyncComponent(() => import('./components/DeckGlMapView.vue'))
 const ControlPanel = defineAsyncComponent(() => import('./pages/ControlPanel.vue'))
 const MapOverlayControls = defineAsyncComponent(() => import('./components/MapOverlayControls.vue'))
 
@@ -183,8 +184,8 @@ const timelineLeftStyle = computed(() => ({ left: `${timelineOffset.value}px` })
 const disclaimerLeftStyle = computed(() => ({ left: `${disclaimerOffset.value}px` }))
 
 const grid250m = computed(() => toggleStore.grid250m)
-// deck.gl renderer A/B toggle (default OFF). When on, the grid view renders via
-// deck.gl instead of Cesium — see <DeckGlGridView>.
+// deck.gl renderer toggle (default OFF). When on, the whole map renders via
+// deck.gl instead of Cesium — see <DeckGlMapView> and ADR-012.
 const deckGlRenderer = computed(() => featureFlagStore.isEnabled('deckglRenderer'))
 const currentLevel = computed(() => globalStore.level)
 const showTimeline = computed(

@@ -198,9 +198,9 @@ export const FLAG_METADATA: FlagMetadataMap = {
 	},
 	deckglRenderer: {
 		goffId: 'r4c-deckgl-renderer',
-		label: 'deck.gl Grid Renderer (spike)',
+		label: 'deck.gl Map Renderer (experimental)',
 		description:
-			'Experimental: render the 250m statistical grid with deck.gl instead of Cesium for A/B comparison. Default OFF — toggle on to replace the Cesium grid view with a lazily-loaded deck.gl canvas.',
+			'Experimental: render the whole map with deck.gl instead of Cesium (ADR-012). Layers not yet ported to deck.gl are hidden, and clicking the map does not select areas or buildings yet. Search, zoom controls and the URL follow the deck.gl camera. Default OFF — toggle off to return to Cesium at the same view.',
 		category: 'graphics',
 		experimental: true,
 		requiresSupport: false,

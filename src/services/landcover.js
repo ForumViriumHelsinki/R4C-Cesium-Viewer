@@ -18,6 +18,8 @@
  */
 
 import { markRaw } from 'vue'
+import { BASE_MAP_LAYER } from '../constants/basemaps.js'
+import { landcoverLayersForYear } from '../constants/landcoverLayers.js'
 import { useBackgroundMapStore } from '../stores/backgroundMapStore.js'
 import { useGlobalStore } from '../stores/globalStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
@@ -190,9 +192,7 @@ const switchOffNdvi = () => {
 	// Forget tracked land-cover layers before removeAll() takes them off the viewer.
 	removeLandcover()
 	store.cesiumViewer.imageryLayers.removeAll()
-	store.cesiumViewer.imageryLayers.add(
-		new Wms().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-	)
+	store.cesiumViewer.imageryLayers.add(new Wms().createHelsinkiImageryLayer(BASE_MAP_LAYER))
 }
 
 /**
@@ -269,23 +269,5 @@ export const removeLandcover = () => {
  * // Returns: "asuminen_ja_maankaytto:maanpeite_avokalliot_2023,..."
  * const layers = createLayersForHsyLandcover(backgroundMapStore);
  */
-const createLayersForHsyLandcover = (backgroundMapStore) => {
-	const year = backgroundMapStore.hsyYear
-	const layerNames = [
-		'asuminen_ja_maankaytto:maanpeite_avokalliot',
-		'asuminen_ja_maankaytto:maanpeite_merialue',
-		'asuminen_ja_maankaytto:maanpeite_muu_avoin_matala_kasvillisuus',
-		'asuminen_ja_maankaytto:maanpeite_muu_vetta_lapaisematon_pinta',
-		'asuminen_ja_maankaytto:maanpeite_paallystamaton_tie',
-		'asuminen_ja_maankaytto:maanpeite_paallystetty_tie',
-		'asuminen_ja_maankaytto:maanpeite_paljas_maa',
-		'asuminen_ja_maankaytto:maanpeite_pellot',
-		'asuminen_ja_maankaytto:maanpeite_puusto_10_15m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_15_20m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_2_10m',
-		'asuminen_ja_maankaytto:maanpeite_puusto_yli20m',
-		'asuminen_ja_maankaytto:maanpeite_vesi',
-	]
-
-	return layerNames.map((name) => `${name}_${year}`).join(',')
-}
+const createLayersForHsyLandcover = (backgroundMapStore) =>
+	landcoverLayersForYear(backgroundMapStore.hsyYear)

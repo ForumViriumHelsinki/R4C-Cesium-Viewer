@@ -12,7 +12,7 @@ import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 // Color scheme constants + the value→hex threshold mapping are the single
 // source of truth in utils/gridColorMapping.js so the deck.gl renderer spike
-// (components/DeckGlGridView.vue) shares the exact same palette without forking.
+// (utils/deckglGridLayer.js) shares the exact same palette without forking.
 // Re-exported here to preserve the existing import surface for consumers
 // (e.g. StatisticalGridOptions.vue imports `indexToColorScheme` from this module).
 import { getGridColorString } from '../utils/gridColorMapping.js'

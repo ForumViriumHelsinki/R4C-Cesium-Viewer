@@ -7,7 +7,7 @@
  * threshold mapping. Both renderers consume it:
  *  - the Cesium path (`composables/useGridStyling.js`) wraps the returned hex
  *    string in a cached `Cesium.Color`;
- *  - the deck.gl spike (`components/DeckGlGridView.vue`) converts it to an
+ *  - the deck.gl renderer (`utils/deckglGridLayer.js`) converts it to an
  *    `[r,g,b,a]` array for `GeoJsonLayer.getFillColor`.
  *
  * No Cesium / deck.gl imports here on purpose — keeping it pure means it can be
