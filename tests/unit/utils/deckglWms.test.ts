@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildWmsGetMapUrl, lngLatToMercator, mercatorBBoxString } from '@/utils/deckglWms'
+import {
+	buildWmsGetMapUrl,
+	lngLatToMercator,
+	mercatorBBoxString,
+	wmsBitmapSubLayerProps,
+} from '@/utils/deckglWms'
 
 describe('deckglWms', () => {
 	describe('lngLatToMercator', () => {
@@ -67,5 +72,23 @@ describe('deckglWms', () => {
 			expect(params.get('width')).toBe('256')
 			expect(params.get('height')).toBe('256')
 		})
+	})
+})
+
+describe('wmsBitmapSubLayerProps (#1228)', () => {
+	const props = {
+		id: 'hsy-wms-underlay-0-0-1',
+		data: 'https://example.test/wms?REQUEST=GetMap',
+		tile: { bbox: { west: 24.9, south: 60.1, east: 25.0, north: 60.2 } },
+	}
+
+	it('passes data: null so BitmapLayer does not iterate the URL string', () => {
+		expect(wmsBitmapSubLayerProps(props).data).toBeNull()
+	})
+
+	it('hands the tile URL to BitmapLayer as image, with the tile bounds', () => {
+		const result = wmsBitmapSubLayerProps(props)
+		expect(result.image).toBe(props.data)
+		expect(result.bounds).toEqual([24.9, 60.1, 25.0, 60.2])
 	})
 })
