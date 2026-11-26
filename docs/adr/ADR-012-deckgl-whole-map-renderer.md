@@ -43,8 +43,17 @@ is the fallback. Renderers are never mixed per layer.
 - A single deck.gl map host owns one `Deck` instance. Each layer type registers
   a factory in `utils/deckglLayerRegistry.js` with an `isActive` predicate over
   store state; the host rebuilds the stack when state changes.
-- The camera converts through `utils/deckglCamera.js`, so the URL camera params
-  stay the shared contract between the two renderers.
+- The camera converts through `utils/deckglCamera.js`, and
+  `utils/deckglCameraSync.js` keeps the hidden Cesium camera in step with deck:
+  deck moves reach Cesium once the view settles, so `useUrlState` keeps writing
+  the URL camera params, and Cesium-side moves (search, zoom and compass
+  controls, drill-down `flyTo`) move deck. The URL camera params stay the shared
+  contract between the two renderers.
+- Tile layers fetch and decode each image inside `getTileData` with deck's
+  `tile.signal` (`utils/deckglImagery.js`, `fetchTileBitmap`), so a tile counts
+  as loaded only once it has pixels. TileLayer's request throttling, cancellation
+  of tiles that leave the view, and placeholder tiles then work as designed.
+  Later tile layers (buildings) reuse this.
 - Layers are ported in this order, each behind the flag with tests first:
   WMS imagery, GeoJSON layers, buildings with picking and drill-down, NDVI and
   VTT flood. A layer not yet ported is absent in deck.gl mode.
@@ -72,6 +81,16 @@ is the fallback. Renderers are never mixed per layer.
 ### Neutral
 
 - Until all layers are ported, deck.gl mode shows fewer layers than Cesium mode.
+- Satellite and topographic base maps replace the Helsinki base map in deck.gl
+  mode. In Cesium they are inserted under it. Replacing is intended: it is what
+  the base-map choice means to a user.
+- The hidden Cesium viewer keeps loading imagery (in EPSG:4326, so no cache
+  sharing with deck's EPSG:3857 tiles) and viewport buildings while deck is
+  shown. Performance comparisons between the renderers are skewed until Cesium
+  loading is gated on the flag (follow-up issue).
+- deck requests WMS in EPSG:3857. The HSY GeoServer serves it (grid spike);
+  kartta.hel.fi and the SYKE GeoServer are to be confirmed before the flag
+  reaches users.
 
 ## Alternatives Considered
 

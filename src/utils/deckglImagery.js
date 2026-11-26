@@ -19,7 +19,9 @@
  */
 import { BASE_MAP_LAYER, BASIC_MAP_TEMPLATES } from '../constants/basemaps.js'
 import { landcoverLayersForYear } from '../constants/landcoverLayers.js'
-import { buildWmsGetMapUrl, WMS_TILE_SIZE } from './deckglWms.js'
+import { recordFailure, recordSuccess } from '../services/hostCircuitBreaker.js'
+import { acquireHostSlot } from '../services/hostConcurrencyLimiter.js'
+import { buildWmsGetMapUrl, WMS_TILE_SIZE, wmsBitmapSubLayerProps } from './deckglWms.js'
 
 export { BASE_MAP_LAYER }
 
@@ -131,19 +133,52 @@ export function xyzTileUrl(template, { x, y, z }) {
 }
 
 /**
- * BitmapLayer for one tile. `props.data` is the tile URL from getTileData; a
- * string `data` makes BitmapLayer throw "count(): argument not a container"
- * (#1228), so it is cleared and the URL goes in as `image`.
- * TODO: use wmsBitmapSubLayerProps from deckglWms.js once #1244 merges.
+ * Fetch and decode one tile image inside deck's `getTileData`, so the tile
+ * counts as loaded only once its bitmap exists. That keeps TileLayer's
+ * behaviour intact: its RequestScheduler throttles real image requests,
+ * `tile.signal` aborts tiles that leave the view before they finish, and
+ * placeholder parent/child tiles stay until the replacement has pixels.
+ * Returning the URL instead marks the tile loaded at once and leaves the image
+ * fetch to BitmapLayer, outside all three.
+ *
+ * Requests share the per-host slot budget with the Cesium loaders, and HSY
+ * failures feed the same circuit breaker (architecture.md, HSY Outage
+ * Resilience Stack).
+ *
+ * @param {string} url
+ * @param {AbortSignal} [signal] - deck's `tile.signal`
+ * @param {Object} [deps] - injectable for tests
+ * @param {typeof fetch} [deps.fetchImpl]
+ * @param {(blob: Blob) => Promise<ImageBitmap>} [deps.decode]
+ * @returns {Promise<ImageBitmap | null>} null when aborted
  */
+export async function fetchTileBitmap(
+	url,
+	signal,
+	{ fetchImpl = fetch, decode = (blob) => createImageBitmap(blob) } = {}
+) {
+	if (signal?.aborted) return null
+	let release = null
+	try {
+		release = await acquireHostSlot(url, signal)
+		const response = await fetchImpl(url, { signal })
+		if (!response.ok) throw new Error(`Tile request failed: HTTP ${response.status}`)
+		const bitmap = await decode(await response.blob())
+		recordSuccess(url)
+		return bitmap
+	} catch (error) {
+		if (signal?.aborted || /** @type {any} */ (error)?.name === 'AbortError') return null
+		recordFailure(url)
+		throw error
+	} finally {
+		release?.()
+	}
+}
+
+/** BitmapLayer for one decoded tile; no bitmap (aborted), no sub-layer. */
 function renderBitmapTile(BitmapLayer, props) {
 	if (props.data == null) return null
-	const { west, south, east, north } = props.tile.bbox
-	return new BitmapLayer(props, {
-		data: null,
-		image: props.data,
-		bounds: [west, south, east, north],
-	})
+	return new BitmapLayer(props, wmsBitmapSubLayerProps(props))
 }
 
 /**
@@ -161,14 +196,17 @@ export function createWmsTileLayer(spec, modules) {
 		maxZoom: WMS_MAX_ZOOM,
 		tileSize: WMS_TILE_SIZE,
 		getTileData: (tile) =>
-			mergeWmsBaseQuery(
-				spec.url,
-				buildWmsGetMapUrl({
-					bbox: tile.bbox,
-					layers: spec.layers,
-					baseUrl: pathOf(spec.url),
-					tileSize: WMS_TILE_SIZE,
-				})
+			fetchTileBitmap(
+				mergeWmsBaseQuery(
+					spec.url,
+					buildWmsGetMapUrl({
+						bbox: tile.bbox,
+						layers: spec.layers,
+						baseUrl: pathOf(spec.url),
+						tileSize: WMS_TILE_SIZE,
+					})
+				),
+				tile.signal
 			),
 		renderSubLayers: (props) => renderBitmapTile(BitmapLayer, props),
 	})
@@ -187,7 +225,7 @@ export function createXyzTileLayer(spec, modules) {
 		minZoom: 0,
 		maxZoom: spec.maxZoom,
 		tileSize: XYZ_TILE_SIZE,
-		getTileData: (tile) => xyzTileUrl(spec.url, tile.index),
+		getTileData: (tile) => fetchTileBitmap(xyzTileUrl(spec.url, tile.index), tile.signal),
 		renderSubLayers: (props) => renderBitmapTile(BitmapLayer, props),
 	})
 }

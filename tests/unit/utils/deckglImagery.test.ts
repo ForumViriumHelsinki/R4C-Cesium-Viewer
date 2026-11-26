@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LANDCOVER_LAYER_NAMES, landcoverLayersForYear } from '@/constants/landcoverLayers'
 import {
 	BASE_MAP_LAYER,
 	createImageryTileLayer,
+	fetchTileBitmap,
 	imageryLayerDefinition,
 	selectImagerySpecs,
 	xyzTileUrl,
@@ -72,11 +73,35 @@ describe('deckglImagery', () => {
 			}
 		}
 		const modules = { layers: { BitmapLayer: class {} }, geoLayers: { TileLayer } }
-		const urlFor = (spec: any) =>
-			(createImageryTileLayer(spec, modules as any) as any).props.getTileData(tile)
+		let requested: string[]
+		beforeEach(() => {
+			requested = []
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async (url: string) => {
+					requested.push(url)
+					return { ok: true, blob: async () => new Blob() }
+				})
+			)
+			vi.stubGlobal(
+				'createImageBitmap',
+				vi.fn(async () => 'bitmap')
+			)
+		})
+		afterEach(() => vi.unstubAllGlobals())
+		/** URL the layer's getTileData requests for one tile. */
+		const urlFor = async (spec: any) => {
+			await (createImageryTileLayer(spec, modules as any) as any).props.getTileData(tile)
+			return requested.at(-1) as string
+		}
 
-		it('appends GetMap params to a base URL that already carries a query', () => {
-			const url = urlFor({ kind: 'wms', id: 'x', url: urls.helsinkiWMS, layers: BASE_MAP_LAYER })
+		it('appends GetMap params to a base URL that already carries a query', async () => {
+			const url = await urlFor({
+				kind: 'wms',
+				id: 'x',
+				url: urls.helsinkiWMS,
+				layers: BASE_MAP_LAYER,
+			})
 			expect(url.startsWith('/helsinki-wms?')).toBe(true)
 			const params = new URL(url, 'http://localhost').searchParams
 			expect(params.getAll('service')).toEqual(['WMS'])
@@ -87,8 +112,8 @@ describe('deckglImagery', () => {
 			expect(params.get('width')).toBe(String(WMS_TILE_SIZE))
 		})
 
-		it('overrides format, keeps other base params on an absolute flood URL', () => {
-			const url = urlFor({
+		it('overrides format, keeps other base params on an absolute flood URL', async () => {
+			const url = await urlFor({
 				kind: 'wms',
 				id: 'f',
 				url: 'https://syke.example/wms?SERVICE=WMS&FORMAT=image/jpeg&map=tulva',
@@ -99,6 +124,11 @@ describe('deckglImagery', () => {
 			expect(params.get('format')).toBe('image/png')
 			expect(params.get('transparent')).toBe('true')
 			expect(params.get('map')).toBe('tulva')
+		})
+
+		it('requests XYZ tiles from the template filled with the tile index', async () => {
+			const url = await urlFor({ kind: 'xyz', id: 's', url: 'https://t.example/{z}/{y}/{x}.png' })
+			expect(url).toBe('https://t.example/0/0/0.png')
 		})
 
 		it('fills an XYZ template from the tile index', () => {
@@ -134,7 +164,6 @@ describe('deckglImagery', () => {
 			const layer: any = createImageryTileLayer(spec as any, modules as any)
 			expect(layer.props.id).toBe('imagery-base')
 			expect(layer.props.tileSize).toBe(WMS_TILE_SIZE)
-			expect(layer.props.getTileData({ bbox, index: { x: 0, y: 0, z: 0 } })).toContain('GetMap')
 		})
 
 		it('uses 256 px tiles and the spec maxZoom for XYZ templates', () => {
@@ -144,13 +173,14 @@ describe('deckglImagery', () => {
 			expect(layer.props.maxZoom).toBe(17)
 		})
 
-		it('hands the tile URL to BitmapLayer as image with data cleared (#1228)', () => {
+		it('hands the decoded tile to BitmapLayer as image with data cleared (#1228)', () => {
 			const spec = { kind: 'wms', id: 'w', url: '/wms/proxy', layers: 'l' }
 			const layer: any = createImageryTileLayer(spec as any, modules as any)
 			const tile = { bbox }
-			const sub = layer.props.renderSubLayers({ id: 'w-0', data: '/wms/proxy?x', tile })
+			const bitmap = { width: 512 }
+			const sub = layer.props.renderSubLayers({ id: 'w-0', data: bitmap, tile })
 			expect(sub.props.data).toBeNull()
-			expect(sub.props.image).toBe('/wms/proxy?x')
+			expect(sub.props.image).toBe(bitmap)
 			expect(sub.props.bounds).toEqual([24.9, 60.1, 25.0, 60.2])
 			expect(layer.props.renderSubLayers({ id: 'w-0', data: null, tile })).toBeNull()
 		})
@@ -216,5 +246,74 @@ describe('readImageryState', () => {
 		const cleared = readImageryState({ toggleStore, backgroundMapStore, urlStore })
 		expect(cleared.hsyOverlayLayer).toBeNull()
 		expect(cleared.floodSelection).toBeNull()
+	})
+})
+
+describe('fetchTileBitmap', () => {
+	const okResponse = () => ({ ok: true, blob: async () => new Blob() })
+
+	beforeEach(async () => {
+		const limiter = await import('@/services/hostConcurrencyLimiter')
+		const breaker = await import('@/services/hostCircuitBreaker')
+		limiter.__resetForTests()
+		breaker.__resetForTests()
+	})
+
+	it('resolves only once the image is decoded, so the tile is not loaded early', async () => {
+		let decoded = false
+		const bitmap = await fetchTileBitmap('/wms/proxy?a', undefined, {
+			fetchImpl: vi.fn(async () => okResponse()) as any,
+			decode: async () => {
+				decoded = true
+				return 'bmp' as any
+			},
+		})
+		expect(decoded).toBe(true)
+		expect(bitmap).toBe('bmp')
+	})
+
+	it("passes deck's tile signal to fetch", async () => {
+		const fetchImpl = vi.fn(async () => okResponse())
+		const controller = new AbortController()
+		await fetchTileBitmap('/wms/proxy?a', controller.signal, {
+			fetchImpl: fetchImpl as any,
+			decode: async () => 'bmp' as any,
+		})
+		expect((fetchImpl.mock.calls[0] as any)[1].signal).toBe(controller.signal)
+	})
+
+	it('does not fetch for a tile already aborted, and resolves null', async () => {
+		const fetchImpl = vi.fn(async () => okResponse())
+		const controller = new AbortController()
+		controller.abort()
+		const result = await fetchTileBitmap('/wms/proxy?a', controller.signal, {
+			fetchImpl: fetchImpl as any,
+		})
+		expect(result).toBeNull()
+		expect(fetchImpl).not.toHaveBeenCalled()
+	})
+
+	it('resolves null when the tile is aborted mid-request and frees its host slot', async () => {
+		const { inspectLimiter } = await import('@/services/hostConcurrencyLimiter')
+		const controller = new AbortController()
+		const fetchImpl = vi.fn(async (_url: string, { signal }: any) => {
+			controller.abort()
+			throw Object.assign(new Error('aborted'), { name: 'AbortError', signal })
+		})
+		const result = await fetchTileBitmap('/wms/proxy?a', controller.signal, {
+			fetchImpl: fetchImpl as any,
+		})
+		expect(result).toBeNull()
+		expect(inspectLimiter().wms.active).toBe(0)
+	})
+
+	it('rejects on an HTTP error and records the failure for the host breaker', async () => {
+		const { inspectBreaker } = await import('@/services/hostCircuitBreaker')
+		await expect(
+			fetchTileBitmap('/wms/proxy?a', undefined, {
+				fetchImpl: vi.fn(async () => ({ ok: false, status: 504 })) as any,
+			})
+		).rejects.toThrow(/504/)
+		expect(inspectBreaker().wms.failures).toBe(1)
 	})
 })

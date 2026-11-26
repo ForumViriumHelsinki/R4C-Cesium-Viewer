@@ -3,8 +3,8 @@
 	  deck.gl map renderer (r4c-deckgl-renderer flag, ADR-012).
 	  Full-viewport map that replaces the Cesium view while the flag is on. Each
 	  layer type is a factory in the deck.gl layer registry; this component owns
-	  the single Deck instance, feeds it store state, and hands the camera back
-	  to Cesium when the flag turns off. Lazy-loaded (App.vue
+	  the single Deck instance, feeds it store state, and keeps its camera in
+	  sync with the hidden Cesium viewer (URL, search, zoom controls). Lazy-loaded (App.vue
 	  defineAsyncComponent), so the deck.gl bundle is fetched only with the flag on.
 	-->
 	<div class="deckgl-map-overlay">
@@ -24,8 +24,9 @@ import { useGlobalStore } from '../stores/globalStore.js'
 import { usePropsStore } from '../stores/propsStore.js'
 import { useToggleStore } from '../stores/toggleStore.js'
 import { useURLStore } from '../stores/urlStore.js'
-import { cesiumCameraToViewState, viewStateToCesiumCamera } from '../utils/deckglCamera.js'
-import { applyCesiumCamera, readCesiumCamera } from '../utils/deckglCesiumBridge.js'
+import { cesiumCameraToViewState } from '../utils/deckglCamera.js'
+import { createCameraSync } from '../utils/deckglCameraSync.js'
+import { readCesiumCamera } from '../utils/deckglCesiumBridge.js'
 import { GRID_URL, gridLayerDefinition } from '../utils/deckglGridLayer.js'
 import { imageryLayerDefinition, readImageryState } from '../utils/deckglImagery.js'
 import { createDeckLayerRegistry } from '../utils/deckglLayerRegistry.js'
@@ -62,8 +63,8 @@ const mapState = computed(() => ({
 
 let deck = null
 let modules = null
-/** Last camera deck reported, handed back to Cesium on unmount. */
-let viewState = null
+/** Two-way camera sync with the hidden Cesium viewer (URL, search, zoom controls). */
+let cameraSync = null
 // Guards the lazy imports resolving after unmount (flag flipped off mid-load),
 // which would otherwise leave a Deck nothing finalizes.
 let isMounted = true
@@ -116,6 +117,33 @@ const stopGridWatch = watch(
 )
 const stopStateWatch = watch(mapState, renderLayers)
 
+/** Jump deck to a camera set from the Cesium side (search, zoom buttons, flyTo). */
+function followCesium(next) {
+	deck?.setProps({ initialViewState: /** @type {any} */ ({ ...next }) })
+}
+
+/** (Re)start camera sync whenever the viewer appears or is replaced. */
+function startCameraSync(viewer) {
+	cameraSync?.dispose()
+	cameraSync = null
+	if (!viewer || !deck) return
+	cameraSync = createCameraSync({
+		viewer,
+		Cesium: getCesium(),
+		getViewport: viewport,
+		onCesiumMove: followCesium,
+	})
+}
+const stopViewerWatch = watch(
+	() => globalStore.cesiumViewer,
+	(viewer) => {
+		const fresh = !cameraSync
+		startCameraSync(viewer)
+		// The viewer arrived after deck (flag on at page load): open at its camera.
+		if (fresh && cameraSync) followCesium(initialViewState())
+	}
+)
+
 onMounted(async () => {
 	const w = /** @type {any} */ (window)
 	try {
@@ -126,18 +154,18 @@ onMounted(async () => {
 		])
 		if (!isMounted) return
 		modules = { core, layers, geoLayers }
-		viewState = initialViewState()
 		deck = new core.Deck({
 			canvas: deckCanvas.value,
 			views: [new core.MapView({ id: 'map', repeat: true })],
-			initialViewState: /** @type {any} */ (viewState),
+			initialViewState: /** @type {any} */ (initialViewState()),
 			controller: true,
 			onViewStateChange: ({ viewState: next }) => {
-				viewState = next
+				cameraSync?.pushFromDeck(next)
 			},
 			layers: /** @type {any} */ (registry.buildLayers({ state: mapState.value, modules })),
 		})
 		w.__deck = deck
+		startCameraSync(globalStore.cesiumViewer)
 	} catch (error) {
 		logger.error('[DeckGlMapView] failed to initialize deck.gl:', error)
 	}
@@ -147,18 +175,15 @@ onBeforeUnmount(() => {
 	isMounted = false
 	stopGridWatch()
 	stopStateWatch()
-	// Keep the view when the flag turns off: move Cesium to where deck was.
-	if (deck && viewState) {
-		try {
-			applyCesiumCamera(
-				globalStore.cesiumViewer,
-				getCesium(),
-				viewStateToCesiumCamera(viewState, viewport())
-			)
-		} catch (error) {
-			logger.debug('[DeckGlMapView] could not hand the camera back to Cesium:', error)
-		}
+	stopViewerWatch()
+	// Keep the view when the flag turns off: dispose applies any deck move not
+	// yet handed to Cesium.
+	try {
+		cameraSync?.dispose()
+	} catch (error) {
+		logger.debug('[DeckGlMapView] could not hand the camera back to Cesium:', error)
 	}
+	cameraSync = null
 	if (deck) {
 		deck.finalize()
 		deck = null

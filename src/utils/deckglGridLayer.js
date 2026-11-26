@@ -2,8 +2,8 @@
  * @module utils/deckglGridLayer
  *
  * The 250 m statistics grid as a deck.gl layer-registry entry (ADR-012). Same
- * GeoJsonLayer and palette as the DeckGlGridView spike, so the grid looks the
- * same once the whole-map host replaces that component.
+ * GeoJsonLayer, palette and alpha as the DeckGlGridView spike (PR #879) it
+ * replaces.
  */
 import { getGridFillColorRgba } from './gridColorMapping.js'
 

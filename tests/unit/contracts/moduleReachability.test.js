@@ -26,8 +26,6 @@ const ALLOWED_UNREACHABLE = {
 	'src/services/loadingCoordinator.js': 'never wired into the app; adopt or delete (follow-up)',
 	'src/constants/performance.js': 'never imported; adopt or delete (follow-up)',
 	'src/utils/entityHelpers.js': 'imported only by its unit test; adopt or delete (follow-up)',
-	'src/components/DeckGlGridView.vue':
-		'replaced by DeckGlMapView (ADR-012); deleted once #1244, which edits it, has merged',
 	'src/utils/wmsRequestCache.js':
 		'imported only by its unit test, though docs/WMS_REQUEST_OPTIMIZATION.md describes it as active; wire in or delete (follow-up)',
 }

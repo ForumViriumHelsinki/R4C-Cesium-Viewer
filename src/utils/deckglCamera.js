@@ -5,14 +5,16 @@
  * position plus heading/pitch, as written to the URL by useUrlState) and a
  * deck.gl MapView `viewState` (the look-at target plus zoom/bearing/pitch).
  *
- * Lets the deck.gl renderer open where the Cesium camera was and write its own
- * camera back into the same URL params, so switching the renderer flag keeps
- * the view. No Cesium / deck.gl imports: unit-testable without a renderer.
+ * Lets the deck.gl renderer open where the Cesium camera was and hand its own
+ * camera back (utils/deckglCameraSync.js), so the URL params keep following the
+ * view and switching the renderer flag keeps it. No Cesium / deck.gl imports:
+ * unit-testable without a renderer.
  *
  * Model:
  *  - Cesium pitch -90 = straight down; deck pitch 0 = straight down.
  *  - The deck target is where the Cesium view ray meets the ground (flat
- *    ellipsoid terrain, which is what the app uses).
+ *    ellipsoid terrain, which is what the app uses), also when the pitch is
+ *    shallower than deck's 60° limit; only deck's output pitch is clamped.
  *  - Zoom is chosen so the ground height visible at the target matches
  *    Cesium's vertical field of view at the same slant distance. It depends
  *    on the viewport's pixel height, since deck zoom fixes meters per pixel.
@@ -24,6 +26,8 @@ const EARTH_RADIUS = 6378137
 const TILE_SIZE = 512
 /** deck.gl MapController default maxPitch, degrees. */
 export const DECK_MAX_PITCH = 60
+/** Shallowest Cesium depression, degrees, still treated as hitting the ground. */
+const MIN_GROUND_DEPRESSION = 1
 /** Cesium PerspectiveFrustum default `fov`, radians (60°). */
 const CESIUM_FOV = Math.PI / 3
 /** Default viewport when the caller does not pass one, CSS pixels. */
@@ -93,8 +97,14 @@ function offset(longitude, latitude, distance, bearingDeg) {
 export function cesiumCameraToViewState(camera, viewport = DEFAULT_VIEWPORT) {
 	const aspectRatio = viewport.width / viewport.height
 	const deckPitch = Math.min(Math.max(90 + camera.pitch, 0), DECK_MAX_PITCH)
-	// Depression angle below the horizon after clamping to what deck can show.
-	const depression = toRad(90 - deckPitch)
+	// The target is where Cesium's view ray actually meets the ground, even when
+	// deck cannot tilt that far: only the output pitch is clamped, so the view
+	// centre does not jump. A ray at or above the horizon never meets the ground;
+	// fall back to the steepest view deck shows.
+	const depression =
+		-camera.pitch >= MIN_GROUND_DEPRESSION
+			? toRad(Math.min(-camera.pitch, 90))
+			: toRad(90 - DECK_MAX_PITCH)
 	const slant = camera.altitude / Math.sin(depression)
 	const ground = camera.altitude / Math.tan(depression)
 	const target = offset(camera.longitude, camera.latitude, ground, camera.heading)
@@ -115,7 +125,7 @@ export function cesiumCameraToViewState(camera, viewport = DEFAULT_VIEWPORT) {
 
 /**
  * Convert a deck.gl MapView viewState back to a Cesium camera — the inverse of
- * {@link cesiumCameraToViewState} for pitches deck can represent.
+ * {@link cesiumCameraToViewState} for Cesium pitches of -30° and steeper.
  * @param {DeckViewState} viewState
  * @param {Viewport} [viewport]
  * @returns {CesiumCamera}

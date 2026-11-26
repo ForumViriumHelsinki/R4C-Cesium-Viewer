@@ -44,13 +44,25 @@ const { default: DeckGlMapView } = await import('@/components/DeckGlMapView.vue'
 
 /** Viewer stand-in with a real Cesium camera position and a setView that records. */
 function fakeViewer() {
+	const listeners = new Set()
 	const camera = {
 		position: Cesium.Cartesian3.fromDegrees(24.945, 60.17, 4000),
 		heading: 0,
 		pitch: -Math.PI / 2,
 		setView: vi.fn(),
+		moveEnd: {
+			addEventListener: (fn) => {
+				listeners.add(fn)
+				return () => listeners.delete(fn)
+			},
+		},
 	}
-	return { camera, scene: { requestRender: vi.fn() } }
+	/** Move the camera as Cesium-side code would (search, zoom buttons) and raise moveEnd. */
+	const moveTo = (lon, lat, alt) => {
+		camera.position = Cesium.Cartesian3.fromDegrees(lon, lat, alt)
+		for (const fn of listeners) fn()
+	}
+	return { camera, scene: { requestRender: vi.fn() }, moveTo, listeners }
 }
 
 const layerIds = (deck) => deck.props.layers.map((l) => l.id)
@@ -108,7 +120,7 @@ describe('DeckGlMapView', () => {
 		wrapper.unmount()
 	})
 
-	it('hands its camera back to Cesium and finalizes deck on unmount', async () => {
+	it('hands a pending deck camera to Cesium and finalizes deck on unmount', async () => {
 		const wrapper = mount(DeckGlMapView)
 		await flushPromises()
 		const deck = decks[0]
@@ -122,6 +134,17 @@ describe('DeckGlMapView', () => {
 		const carto = Cesium.Cartographic.fromCartesian(destination)
 		expect(Cesium.Math.toDegrees(carto.longitude)).toBeCloseTo(25.0, 4)
 		expect(Cesium.Math.toDegrees(carto.latitude)).toBeCloseTo(60.2, 4)
+	})
+
+	it('follows a Cesium-side camera move (search, zoom controls) and stops on unmount', async () => {
+		const wrapper = mount(DeckGlMapView)
+		await flushPromises()
+		viewer.moveTo(25.05, 60.21, 2000)
+		const next = decks[0].setProps.mock.calls.at(-1)[0].initialViewState
+		expect(next.longitude).toBeCloseTo(25.05, 4)
+		expect(next.latitude).toBeCloseTo(60.21, 4)
+		wrapper.unmount()
+		expect(viewer.listeners.size).toBe(0)
 	})
 
 	it('creates no Deck when unmounted before deck.gl finished loading', async () => {

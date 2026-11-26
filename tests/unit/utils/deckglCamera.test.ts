@@ -39,9 +39,24 @@ describe('deckglCamera', () => {
 			expect(east.bearing).toBeCloseTo(90, 6)
 		})
 
-		it('clamps near-horizontal pitches to the deck maxPitch', () => {
-			const vs = cesiumCameraToViewState({ ...HELSINKI, altitude: 4000, heading: 0, pitch: -1 })
-			expect(vs.pitch).toBeLessThanOrEqual(60)
+		it('puts the target at the ground point of the view ray (ground truth)', () => {
+			// Heading 0, pitch -45°, 4000 m up: the ray meets the ground 4000 m north.
+			const vs = cesiumCameraToViewState({ ...HELSINKI, altitude: 4000, heading: 0, pitch: -45 })
+			expect(vs.latitude - HELSINKI.latitude).toBeCloseTo(0.03593, 5)
+			expect(vs.longitude).toBeCloseTo(HELSINKI.longitude, 9)
+		})
+
+		it('keeps the target on the true view ray when the pitch exceeds deck maxPitch', () => {
+			// Pitch -20° at 1000 m: ground point 1000 / tan 20° ≈ 2747 m ahead.
+			const vs = cesiumCameraToViewState({ ...HELSINKI, altitude: 1000, heading: 0, pitch: -20 })
+			const groundMeters = ((vs.latitude - HELSINKI.latitude) * Math.PI * 6378137) / 180
+			expect(groundMeters).toBeCloseTo(1000 / Math.tan((20 * Math.PI) / 180), 0)
+			expect(vs.pitch).toBe(60)
+		})
+
+		it('falls back to deck maxPitch for a ray at or above the horizon', () => {
+			const vs = cesiumCameraToViewState({ ...HELSINKI, altitude: 4000, heading: 0, pitch: 5 })
+			expect(vs.pitch).toBe(60)
 			expect(Number.isFinite(vs.latitude)).toBe(true)
 			expect(Number.isFinite(vs.zoom)).toBe(true)
 		})
