@@ -87,3 +87,25 @@ export function buildWmsGetMapUrl({
 	})
 	return `${baseUrl}?${params.toString()}`
 }
+
+/**
+ * Extra props for the BitmapLayer each WMS tile renders.
+ *
+ * TileLayer passes the tile's `getTileData` result (the GetMap URL string) as
+ * `props.data`. BitmapLayer needs no data rows, and a string `data` makes
+ * deck.gl throw "count(): argument not a container" for every tile (#1228),
+ * so `data` is cleared and the URL goes in as `image`.
+ *
+ * Typed loosely: deck.gl's own sub-layer prop types are not imported here.
+ *
+ * @param {any} props - TileLayer sub-layer props (`data` is the URL, `tile.bbox` WGS84)
+ * @returns {any} `{ data: null, image, bounds: [west, south, east, north] }`
+ */
+export function wmsBitmapSubLayerProps(props) {
+	const { west, south, east, north } = props.tile.bbox
+	return {
+		data: null,
+		image: props.data,
+		bounds: [west, south, east, north],
+	}
+}

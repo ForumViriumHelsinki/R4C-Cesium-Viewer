@@ -17,7 +17,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePropsStore } from '../stores/propsStore.js'
-import { buildWmsGetMapUrl, WMS_TILE_SIZE } from '../utils/deckglWms.js'
+import { buildWmsGetMapUrl, WMS_TILE_SIZE, wmsBitmapSubLayerProps } from '../utils/deckglWms.js'
 import { getGridFillColorRgba } from '../utils/gridColorMapping.js'
 import logger from '../utils/logger.js'
 
@@ -91,13 +91,7 @@ function buildLayers(grid, selectedIndex, layers, geoLayers) {
 				tileSize: WMS_TILE_SIZE,
 			})
 		},
-		renderSubLayers: (props) => {
-			const { west, south, east, north } = /** @type {any} */ (props.tile.bbox)
-			return new BitmapLayer(props, {
-				image: props.data,
-				bounds: [west, south, east, north],
-			})
-		},
+		renderSubLayers: (props) => new BitmapLayer(props, wmsBitmapSubLayerProps(props)),
 	})
 
 	// 250m stats grid choropleth — colored with the SAME palette as the Cesium

@@ -118,7 +118,8 @@ export default class DataSource {
 					new Promise((resolveRemove) => {
 						const REMOVAL_TIMEOUT_MS = 5000
 
-						const onDataSourceRemoved = (removedDataSource) => {
+						// Cesium raises dataSourceRemoved with (collection, dataSource) (#1227)
+						const onDataSourceRemoved = (_collection, removedDataSource) => {
 							if (removedDataSource === dataSource) {
 								clearTimeout(timeoutId)
 								this.store.cesiumViewer?.dataSources?.dataSourceRemoved?.removeEventListener(

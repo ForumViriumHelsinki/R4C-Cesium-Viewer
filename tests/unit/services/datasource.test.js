@@ -353,3 +353,65 @@ describe(
 		})
 	}
 )
+
+describe(
+	'DataSource.removeDataSourcesByNamePrefix (#1227)',
+	{
+		tag: ['unit'],
+	},
+	() => {
+		/**
+		 * Minimal stand-in for Cesium's DataSourceCollection: remove() raises
+		 * dataSourceRemoved synchronously with (collection, dataSource), as
+		 * @cesium/engine DataSourceCollection.js does.
+		 */
+		function makeCollection(dataSources) {
+			const listeners = new Set()
+			const collection = {
+				_dataSources: [...dataSources],
+				dataSourceRemoved: {
+					addEventListener: (fn) => listeners.add(fn),
+					removeEventListener: (fn) => listeners.delete(fn),
+				},
+				remove(ds) {
+					const i = collection._dataSources.indexOf(ds)
+					if (i < 0) return false
+					collection._dataSources.splice(i, 1)
+					for (const fn of [...listeners]) fn(collection, ds)
+					return true
+				},
+				listenerCount: () => listeners.size,
+			}
+			return collection
+		}
+
+		beforeEach(async () => {
+			setActivePinia(createPinia())
+			vi.useFakeTimers()
+		})
+
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		it('resolves on the removal event, without waiting for the timeout', async () => {
+			const { useGlobalStore } = await import('@/stores/globalStore.js')
+			const tile = { name: 'Buildings Viewport HSY 1_2' }
+			const other = { name: 'Other' }
+			const collection = makeCollection([tile, other])
+			useGlobalStore.mockReturnValueOnce({ cesiumViewer: { dataSources: collection } })
+			const service = new DataSource()
+
+			let resolved = false
+			service.removeDataSourcesByNamePrefix('Buildings Viewport').then(() => {
+				resolved = true
+			})
+			// Flush microtasks only; the 5 s timeout must not be needed.
+			await vi.advanceTimersByTimeAsync(0)
+
+			expect(resolved).toBe(true)
+			expect(collection._dataSources).toEqual([other])
+			expect(collection.listenerCount()).toBe(0)
+		})
+	}
+)

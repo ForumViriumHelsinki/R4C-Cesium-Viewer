@@ -188,6 +188,7 @@
 import { computed, ref, watch } from 'vue'
 import { LAYER_LABELS } from '../constants/metricLabels.js'
 import { useLoadingStore } from '../stores/loadingStore'
+import { hapticPulse } from '../utils/haptics.js'
 
 // Props
 const props = defineProps({
@@ -298,8 +299,8 @@ const formatDuration = (ms) => {
 watch(
 	() => loadingStore.hasActiveLoading,
 	(isLoading) => {
-		if (isLoading && 'vibrate' in navigator) {
-			navigator.vibrate([50]) // Subtle vibration when loading starts
+		if (isLoading) {
+			hapticPulse([50]) // Subtle vibration when loading starts
 		}
 	}
 )
