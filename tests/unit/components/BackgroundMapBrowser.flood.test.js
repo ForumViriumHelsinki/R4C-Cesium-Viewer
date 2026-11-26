@@ -16,6 +16,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import BackgroundMapBrowser from '@/components/BackgroundMapBrowser.vue'
 import { createFloodImageryLayer } from '@/services/floodwms'
+import { useBackgroundMapStore } from '@/stores/backgroundMapStore'
 import { useURLStore } from '@/stores/urlStore'
 
 // Layer id -> the SYKE GeoServer workspace whose GetCapabilities lists it
@@ -137,5 +138,25 @@ describe('BackgroundMapBrowser flood scenarios', { tags: ['@unit'] }, () => {
 
 		expect(loadedLayers().at(-2)).toBe('coastal_flood_SSP245_2050_0020_with_protected')
 		expect(loadedLayers().at(-1)).toBe('coastal_flood_SSP245_2100_0020_with_protected')
+	})
+
+	it('records the selected scenario in the store for the deck.gl renderer (ADR-012)', async () => {
+		const wrapper = await mountFloodCategory()
+		const backgroundMapStore = useBackgroundMapStore()
+		const coastal = scenarioButtons(wrapper).find((b) => /SSP126/.test(b.text()))
+		await coastal.trigger('click')
+		await flushPromises()
+
+		const id = loadedLayers().at(-1)
+		expect(backgroundMapStore.floodSelection).toEqual({
+			id,
+			url: useURLStore().sykeFloodUrl(id),
+		})
+
+		await buttons(wrapper)
+			.find((b) => b.text().trim() === 'None')
+			.trigger('click')
+		await flushPromises()
+		expect(backgroundMapStore.floodSelection).toBeNull()
 	})
 })

@@ -290,13 +290,22 @@ If discriminators 1 and 2 hold, the request volume is expected and nginx
 ## deck.gl Renderer (experimental, behind flag)
 
 The `r4c-deckgl-renderer` feature flag (default OFF everywhere; local
-override via FeatureFlagsPanel) swaps the stats-grid view to a deck.gl 9.x
-renderer (`src/components/DeckGlGridView.vue`, GeoJsonLayer choropleth + HSY
-WMS via TileLayer in EPSG:3857). Spike verdict (PR #879): styling 17–29 ms vs
-Cesium's 127 ms, ~half the memory, ~454 KB gz lazy chunk vs Cesium's 1.25 MB.
+override via FeatureFlagsPanel) switches the **whole map** from Cesium to one
+deck.gl 9.x `MapView` (ADR-012); renderers are never mixed per layer.
+`src/components/DeckGlMapView.vue` owns the single `Deck`; each layer type is a
+factory in a layer registry (`src/utils/deckglLayerRegistry.js`) that reads plain
+store state: imagery in `deckglImagery.js`, the grid in `deckglGridLayer.js`. The
+camera converts through `deckglCamera.js` and goes back to Cesium on unmount. A
+layer not yet ported is absent in deck.gl mode. Grid spike verdict (PR #879):
+styling 17–29 ms vs Cesium's 127 ms, ~half the memory, ~454 KB gz lazy chunk vs
+Cesium's 1.25 MB.
 
+- **Adding a layer**: write a registry definition (`id`, `order`, `isActive`,
+  `build`) that takes deck modules from `ctx.modules`, never by import, and
+  register it in `DeckGlMapView`. Put the style decision in a pure function both
+  renderers call.
 - **Lazy-load invariant**: deck.gl chunks must never appear in the entry
-  bundle — `DeckGlGridView` is dynamically imported; check the build output
+  bundle — `DeckGlMapView` is dynamically imported; check the build output
   if you touch its imports.
 - **Shared palette**: both renderers consume `src/utils/gridColorMapping.js`
   (extracted from `useGridStyling.js`, which re-exports it for existing

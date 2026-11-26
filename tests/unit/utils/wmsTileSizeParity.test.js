@@ -92,7 +92,6 @@ describe('WMS tile size matches across renderers (#966)', { tags: ['@unit', '@wm
 		)
 		// Control: the deck.gl WMS underlay and imagery layers are found.
 		const files = tileLayers.map((t) => t.file)
-		expect(files).toContain('src/components/DeckGlGridView.vue')
 		expect(files).toContain('src/utils/deckglImagery.js')
 		// XYZ base maps are not WMS: they declare XYZ_TILE_SIZE and build no GetMap.
 		const isXyz = (t) => t.tileSize === XYZ_TILE_SIZE && t.getMapSize === 'no GetMap call'
