@@ -296,6 +296,7 @@
 
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
+import { BASIC_MAP_TEMPLATES } from '../constants/basemaps.js'
 import {
 	COASTAL_SCENARIOS,
 	COASTAL_YEARS,
@@ -316,7 +317,7 @@ import logger from '../utils/logger.js'
 export default {
 	name: 'BackgroundMapBrowser',
 	setup() {
-		const _backgroundMapStore = useBackgroundMapStore()
+		const backgroundMapStore = useBackgroundMapStore()
 		const featureFlagStore = useFeatureFlagStore()
 		const globalStore = useGlobalStore()
 		const urlStore = useURLStore()
@@ -567,10 +568,11 @@ export default {
 			if (map.value === 'satellite') {
 				// ESRI World Imagery — no token required
 				try {
+					const { url, maxZoom, credit } = BASIC_MAP_TEMPLATES.satellite
 					const provider = new Cesium.UrlTemplateImageryProvider({
-						url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-						maximumLevel: 19,
-						credit: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+						url,
+						maximumLevel: maxZoom,
+						credit,
 					})
 					basicMapLayer.value = new Cesium.ImageryLayer(provider)
 					// Insert at the bottom so it sits beneath all other overlays
@@ -582,10 +584,11 @@ export default {
 			} else if (map.value === 'terrain') {
 				// OpenTopoMap — CC-BY-SA, no token required
 				try {
+					const { url, maxZoom, credit } = BASIC_MAP_TEMPLATES.terrain
 					const provider = new Cesium.UrlTemplateImageryProvider({
-						url: 'https://tile.opentopomap.org/{z}/{x}/{y}.png',
-						maximumLevel: 17,
-						credit: '© OpenTopoMap contributors (CC-BY-SA)',
+						url,
+						maximumLevel: maxZoom,
+						credit,
 					})
 					basicMapLayer.value = new Cesium.ImageryLayer(provider)
 					// Insert at the bottom so it sits beneath all other overlays
@@ -601,10 +604,12 @@ export default {
 
 		const updateFloodLayer = async () => {
 			removeFloodLayers()
+			backgroundMapStore.setFloodSelection(null)
 
 			if (selectedFloodLayer.value && selectedFloodLayer.value !== 'none') {
 				const url = urlStore.sykeFloodUrl(selectedFloodLayer.value)
 				if (url) {
+					backgroundMapStore.setFloodSelection({ id: selectedFloodLayer.value, url })
 					await createFloodImageryLayer(url, selectedFloodLayer.value)
 				}
 			}
@@ -621,6 +626,7 @@ export default {
 			selectedHSYLayer.value = null
 			selectedFloodLayer.value = 'none'
 			removeFloodLayers()
+			backgroundMapStore.setFloodSelection(null)
 		}
 
 		const formatDate = (dateString) => {
@@ -630,6 +636,12 @@ export default {
 
 		// Watchers
 		watch(selectedFloodLayer, updateFloodLayer)
+		// Mirror the selection into the store for the deck.gl renderer (ADR-012).
+		// Stopped with the component's effect scope on unmount.
+		watch(selectedBasicMap, (value) => backgroundMapStore.setBasicMap(value), { immediate: true })
+		watch(selectedHSYLayer, (value) => backgroundMapStore.setHSYOverlayLayer(value), {
+			immediate: true,
+		})
 
 		// Initialize
 		onMounted(() => {

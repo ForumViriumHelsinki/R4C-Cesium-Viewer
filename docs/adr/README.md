@@ -17,6 +17,7 @@ This directory contains Architecture Decision Records for the R4C-Cesium-Viewer 
 | [ADR-009](./ADR-009-analysis-registry.md)              | Analysis Registry, ChartCard Contract, and Map Coupling | Accepted   | 2026-09-16 |
 | [ADR-010](./ADR-010-analysis-workspace.md)             | Analysis Workspace as an In-Page Overlay                | Accepted   | 2026-09-23 |
 | [ADR-011](./ADR-011-lighthouse-render-profile.md)      | Pinned Render Profile for Lighthouse CI                 | Accepted   | 2026-10-09 |
+| [ADR-012](./ADR-012-deckgl-whole-map-renderer.md)      | deck.gl Renderer Switches the Whole Map                 | Accepted   | 2026-11-26 |
 
 ## ADR Status Lifecycle
 

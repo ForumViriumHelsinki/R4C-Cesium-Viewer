@@ -50,6 +50,15 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		landcoverLayers: [],
 		/** @type {Array<Object>} */
 		floodLayers: [],
+		// Declarative imagery selection, read by the deck.gl renderer (ADR-012).
+		// The Cesium path keeps its own ImageryLayer objects above; these fields
+		// describe the same selection without them.
+		/** @type {'default' | 'satellite' | 'terrain'} */
+		basicMap: 'default',
+		/** @type {string | null} HSY catalogue layer shown over the base map */
+		hsyOverlayLayer: null,
+		/** @type {{id: string, url: string} | null} SYKE flood scenario on the map */
+		floodSelection: null,
 	}),
 	actions: {
 		/**
@@ -114,6 +123,15 @@ export const useBackgroundMapStore = defineStore('backgroundMap', {
 		 */
 		clearFloodLayers() {
 			this.floodLayers = []
+		},
+		setBasicMap(basicMap) {
+			this.basicMap = basicMap
+		},
+		setHSYOverlayLayer(layerName) {
+			this.hsyOverlayLayer = layerName || null
+		},
+		setFloodSelection(selection) {
+			this.floodSelection = selection ? { id: selection.id, url: selection.url } : null
 		},
 	},
 })

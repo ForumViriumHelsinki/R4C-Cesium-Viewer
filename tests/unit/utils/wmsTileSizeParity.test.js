@@ -15,10 +15,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { XYZ_TILE_SIZE } from '@/utils/deckglImagery'
 import { buildWmsGetMapUrl, WMS_TILE_SIZE } from '@/utils/deckglWms'
 
 // Named constants a tile-size property may reference instead of a literal.
-const KNOWN_CONSTANTS = { WMS_TILE_SIZE }
+const KNOWN_CONSTANTS = { WMS_TILE_SIZE, XYZ_TILE_SIZE }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const EXPECTED = 512
@@ -89,9 +90,15 @@ describe('WMS tile size matches across renderers (#966)', { tags: ['@unit', '@wm
 				return { file, tileSize: propValue(obj, 'tileSize'), getMapSize }
 			})
 		)
-		// Control: the deck.gl WMS underlay is found.
-		expect(tileLayers.map((t) => t.file)).toContain('src/components/DeckGlGridView.vue')
-		const off = tileLayers.filter((t) => t.tileSize !== EXPECTED || t.getMapSize !== EXPECTED)
+		// Control: the deck.gl WMS underlay and imagery layers are found.
+		const files = tileLayers.map((t) => t.file)
+		expect(files).toContain('src/components/DeckGlGridView.vue')
+		expect(files).toContain('src/utils/deckglImagery.js')
+		// XYZ base maps are not WMS: they declare XYZ_TILE_SIZE and build no GetMap.
+		const isXyz = (t) => t.tileSize === XYZ_TILE_SIZE && t.getMapSize === 'no GetMap call'
+		const off = tileLayers.filter(
+			(t) => !isXyz(t) && (t.tileSize !== EXPECTED || t.getMapSize !== EXPECTED)
+		)
 		expect(off).toEqual([])
 	})
 })

@@ -6,6 +6,7 @@
  */
 
 import { ref } from 'vue'
+import { BASE_MAP_LAYER } from '../constants/basemaps.js'
 import { VIEWER_INIT_MESSAGES } from '../constants/errorMessages.js'
 import { cesiumProvider, getCesium } from '../services/cesiumProvider.js'
 import { useGlobalStore } from '../stores/globalStore.js'
@@ -227,9 +228,7 @@ export function useViewerInitialization() {
 		graphics = new Graphics()
 		graphics.init(viewer.value)
 
-		viewer.value.imageryLayers.add(
-			new WMS().createHelsinkiImageryLayer('avoindata:Karttasarja_PKS')
-		)
+		viewer.value.imageryLayers.add(new WMS().createHelsinkiImageryLayer(BASE_MAP_LAYER))
 
 		const camera = new Camera()
 		camera.init()
