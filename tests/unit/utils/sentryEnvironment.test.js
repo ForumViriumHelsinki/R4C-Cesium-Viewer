@@ -96,6 +96,23 @@ describe('static sweep: where the Sentry environment comes from (#995)', () => {
 		}
 	})
 
+	// #1230: the Terraform-managed project is `r4c-cesium-viewer`.
+	// infrastructure/github/secrets_sentry.tf writes its DSN to SENTRY_DSN; the
+	// hand-set VITE_SENTRY_DSN secret holds the legacy `regions4climate` DSN.
+	it('the production image workflows read the Terraform-managed SENTRY_DSN secret', () => {
+		for (const f of PRODUCTION_IMAGE_WORKFLOWS) {
+			const workflow = read(`.github/workflows/${f}`)
+			expect(workflow, f).toMatch(/^\s*VITE_SENTRY_DSN=\$\{\{ secrets\.SENTRY_DSN \}\}\s*$/m)
+			expect(workflow, f).not.toContain('secrets.VITE_SENTRY_DSN')
+		}
+	})
+
+	it('source maps upload to the Terraform-managed r4c-cesium-viewer project', () => {
+		const viteConfig = read('vite.config.js')
+		expect(viteConfig).toMatch(/sentryVitePlugin\(\{[^}]*project:\s*'r4c-cesium-viewer'/s)
+		expect(viteConfig).not.toMatch(/project:\s*'regions4climate'/)
+	})
+
 	it('the Dockerfile forwards VITE_SENTRY_ENVIRONMENT to the Vite build without a default', () => {
 		const dockerfile = read('Dockerfile')
 		expect(dockerfile).toMatch(/^ARG VITE_SENTRY_ENVIRONMENT$/m)
